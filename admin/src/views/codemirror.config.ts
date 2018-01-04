@@ -1,0 +1,15 @@
+import { Controlled as CodeMirror } from 'react-codemirror2'
+// import 'codemirror/mode'
+import 'codemirror/mode/markdown/markdown'
+import 'codemirror/mode/javascript/javascript'
+import 'codemirror/addon/edit/closebrackets'
+import 'codemirror/addon/edit/matchbrackets'
+import 'codemirror/addon/selection/active-line'
+import 'codemirror/keymap/sublime'
+import 'codemirror/addon/fold/foldgutter.js'
+import 'codemirror/addon/fold/foldgutter.css'
+import 'codemirror/addon/fold/markdown-fold'
+import 'codemirror/addon/fold/brace-fold'
+import 'codemirror/theme/solarized.css'
+
+export default CodeMirror

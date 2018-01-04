@@ -1,0 +1,17 @@
+{
+    "compilerOptions": {
+        "outDir": "./dist/",
+        // "outFile": "./bundle/bundle.js",
+        "sourceMap": true,
+        "noImplicitAny": true,
+        "module": "es2015", //commonjs
+        "moduleResolution": "node",
+        "target": "es2015",
+        "jsx": "react"
+        // "experimentalDecorators": true,
+        // "strictNullChecks": true
+    },
+    "include": [
+        "./src/**/*"
+    ]
+}
