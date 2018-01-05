@@ -43,7 +43,8 @@ const mainStyles: StyleRulesCallback = theme => ({
         // width: '90%',
         // position: 'fixed',
         // left: '10%',
-        overflow: 'auto',
+        overflowX: 'hidden',
+        overflowY: 'auto',
         width: '100%',
         position: 'relative',
     },
@@ -89,8 +90,8 @@ class layout extends React.Component<{ classes: any }>{
                     {<Route path="/admin/waste" component={WasteView} />}
                     <Route path="/admin/notebooks" component={NotebooksView} />
                     <Route path="/admin/blogs" component={BlogsView} />
-                    <Route path="/admin/blog/:id" component={BLogView} />                    
-                    <Route path="/admin/tags" component={TagsView} />                    
+                    <Route path="/admin/blog/:id" component={BLogView} />
+                    <Route path="/admin/tags" component={TagsView} />
                     <Route path="/admin/preference" component={PreferenceView} />
                     <Route path="/admin" exact component={() => <div> 404 </div>} />
                     <Route component={() => <Redirect to="/admin" />} />
