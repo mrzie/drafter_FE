@@ -2,7 +2,7 @@ const webpack = require('webpack');
 module.exports = env => ({
     entry: "./dist/index.js",
     output: {
-        filename: "bundle.js",
+        filename: "admin.js",
         path: __dirname + "/bundle"
     },
 
