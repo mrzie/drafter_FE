@@ -544,6 +544,13 @@ span.CodeMirror-selectedtext {
   word-wrap: break-word;
 }
 
+.markdown-body img[src="fail"] {
+  background-image: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjUwIiB4bWxucz0ia…E9IjIxLjMwNDE1NiIgeDE9IjU2LjEwNzM5IiBmaWxsPSJub25lIi8+CiA8L2c+Cjwvc3ZnPg==);
+  width: 120px;
+  height: 50px;
+  display: block;
+}
+
 .markdown-body .pl-c {
   color: #6a737d;
 }
