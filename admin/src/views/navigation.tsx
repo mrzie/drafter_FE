@@ -27,7 +27,7 @@ const styles: StyleRulesCallback = theme => ({
             display: 'block',
             position: 'absolute',
             color: '#fff',
-            background: 'rgba(255, 255, 255, 0.56)',
+            background: 'rgba(0, 0, 0, 0.56)',
             borderRadius: '2px',
             left: '100%',
             fontSize: '.8em',

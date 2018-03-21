@@ -93,8 +93,7 @@ class layout extends React.Component<{ classes: any }>{
                     <Route path="/admin/blog/:id" component={BLogView} />
                     <Route path="/admin/tags" component={TagsView} />
                     <Route path="/admin/preference" component={PreferenceView} />
-                    <Route path="/admin" exact component={() => <div> 404 </div>} />
-                    <Route component={() => <Redirect to="/admin" />} />
+                    <Route component={() => <Redirect to="/admin/notebook/" />} />
                 </Switch>
                 <Modals />
             </div>

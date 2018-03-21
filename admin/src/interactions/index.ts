@@ -96,3 +96,5 @@ export const cleanModalUnderRange = (range: number) => {
 }
 
 export const removeModal = (ids: number[]) => dispatch({ type: Types._REMOVE_MODAL, ids })
+
+export const uploadCheck = (id: string) => dispatch({type: Types.UPLOAD_CHECK, id})

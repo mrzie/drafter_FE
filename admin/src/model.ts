@@ -71,6 +71,7 @@ export interface State {
     authenticate?: boolean,
     preference: Preference,
     interactions: Interactions, // 作为变量记录页面上的交互数据。如呈现的notebook。我还没想好内容
+    uploadQueue: UploadTask[],
 }
 
 export interface Choice {
@@ -99,4 +100,10 @@ export interface Preference {
     author: string,
     intro: string,
     pageSize?: number,
+}
+
+export interface UploadTask {
+    id:string,
+    state: number, // 0 - pending, 1 - success, 2 - fail
+    value?: string,
 }

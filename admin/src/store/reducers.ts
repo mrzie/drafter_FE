@@ -8,7 +8,8 @@ import {
     Interactions,
     Modal,
     Warning,
-    Preference
+    Preference,
+    UploadTask
 } from '../model'
 import { Reducer, combineReducers, AnyAction } from 'redux'
 import { tempIdPrefix } from '../utils'
@@ -177,6 +178,12 @@ export enum Types {
     _CACHE_TAG_DESCRIPTION,
     // // 发布、修改博客后修改标签数量
     // _RECOUNT_TAGS,
+
+
+    UPLOAD_START,
+    UPLOAD_SUCCESS,
+    UPLOAD_FAIL,
+    UPLOAD_CHECK, // 上传图片结束并插入文档之后，清楚对应缓存
 }
 
 export interface Action extends AnyAction {
@@ -480,6 +487,28 @@ const tags: Reducer<Tag[]> = (state = [], actions: Action) => {
             return state
     }
 }
+
+interface uploadQueueAction extends Action {
+    id: string,
+    // state?: number,
+    value?: string,
+}
+
+const uploadQueue: Reducer<UploadTask[]> = (state = [], actions: uploadQueueAction) => {
+    switch (actions.type) {
+        case Types.UPLOAD_START:
+            return [...state, { id: actions.id, state: 0 }]
+        case Types.UPLOAD_SUCCESS:
+            return replaceItem(state, t => t.id == actions.id, t => ({ ...t, state: 1, value: actions.value }))
+        case Types.UPLOAD_FAIL:
+            return replaceItem(state, t => t.id == actions.id, t => ({ ...t, state: 2 }))
+        case Types.UPLOAD_CHECK:
+            return excludeFunc(state, t => t.id == actions.id)
+        default:
+            return state
+    }
+}
+
 const preferenceInit = __conf.preference || {
     siteName: '',
     domain: '',
@@ -751,4 +780,5 @@ export const reducer: Reducer<State> = combineReducers({
     authenticate,
     interactions,
     preference,
+    uploadQueue,
 })

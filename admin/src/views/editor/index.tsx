@@ -6,11 +6,12 @@ import TagEditor from './tagEditor'
 import withEditorStyles from './editorStyles'
 import { connect } from 'react-redux'
 import * as ReactDOM from 'react-dom'
-import { State, Note, TempNote, Notebook, Blog } from '../../model'
+import { State, Note, TempNote, Notebook, Blog, UploadTask } from '../../model'
 import * as interactions from '../../interactions'
 import { Delete, Save, Publish, /* did you fix publish?*/ } from 'material-ui-icons'
 import * as api from '../../api'
-import { marked, isTempIdPrefixed, isBlogBusy } from '../../utils'
+import { marked, isTempIdPrefixed, isBlogBusy, timeFormat } from '../../utils'
+import uploadCounter from './uploadCounter'
 
 const mapStateToProps = (state: State, ownProps: { classes: any, theme?: any }) => {
     const blank = {
@@ -28,6 +29,7 @@ const mapStateToProps = (state: State, ownProps: { classes: any, theme?: any }) 
         currentNote: '',
         blogs: state.blogs,
         loadings: null as string[],
+        uploadQueue: state.uploadQueue,
     }
     const { currentNote } = state.interactions
     if (currentNote === '') {
@@ -90,6 +92,7 @@ interface EditorProps {
     isDeleting: boolean,
     currentNote: string,
     blogs: Blog[],
+    uploadQueue: UploadTask[],
 }
 
 interface EditorState {
@@ -97,17 +100,28 @@ interface EditorState {
     text: string,
     tags: string[],
     publishMenuOpen: boolean,
+    isDragOver: boolean,
+}
+
+interface Replacement {
+    id: string,
+    match: string,
+    altText: string,
+    url: string,
 }
 
 const propsReadonly = (p: EditorProps) => p.empty || p.isFetching || p.isSaving || p.isDeleting
 
+interface CMInstance extends CodeMirror.Doc, CodeMirror.Editor { }
 class Editor extends React.Component<EditorProps, EditorState> {
     state = {
         title: this.props.title,
         text: this.props.content,
         tags: this.props.tags,
         publishMenuOpen: false,
+        isDragOver: false,
     }
+    doc: CMInstance = null
     publishEl: HTMLElement = null
     constructor(...args: any[]) {
         super(...args)
@@ -133,6 +147,15 @@ class Editor extends React.Component<EditorProps, EditorState> {
         if (worthReInit) {
             this.initInputAreas(next)
         }
+
+        // 检查是否有已经上传成功或失败的图片
+        // const matched = next.uploadQueue.filter(task => {
+        //     if (task.state === 0) {
+        //         return
+        //     }
+        //     task.id
+        // })
+        this.replaceImageHolder(next.uploadQueue)
     }
     componentWillUnmount() {
         if (!propsReadonly(this.props)) {
@@ -195,12 +218,96 @@ class Editor extends React.Component<EditorProps, EditorState> {
         api.editBlog(id, noteid)
 
     }
+    handleDrop: React.DragEventHandler<HTMLDivElement> = e => {
+        e.preventDefault()
+        e.stopPropagation()
+
+        if (propsReadonly(this.props)) {
+            // 对于无法编辑的文章不触发拖拽上传（不是，传完了图放哪儿啊
+            return
+        }
+
+        this.setState({ isDragOver: false })
+        const
+            files = e.dataTransfer.files,
+            images: File[] = Array.prototype.filter.call(files, (f: File) => f.type.indexOf('image/') == 0),
+            holders = images.map(f => {
+                // with side effect
+                const id = uploadCounter()
+                api.uploadImage(f, id)
+                return id
+            })
+        this.insertImageHolder(holders)
+
+    }
+    handleDragEnter: React.DragEventHandler<HTMLDivElement> = e => {
+        if (this.state.isDragOver) {
+            return
+        }
+        e.preventDefault()
+        e.stopPropagation()
+        if (propsReadonly(this.props)) {
+            // 对于无法编辑的文章不触发拖拽上传
+            return
+        }
+        this.setState({ isDragOver: true })
+    }
+    handleDragLeave: React.DragEventHandler<HTMLDivElement> = e => {
+        e.preventDefault()
+        e.stopPropagation()
+        this.setState({ isDragOver: false })
+    }
+    insertImageHolder(holders: string[]) {
+        const
+            isAnchor = this.doc.getSelection().length === 0,
+            cursor = this.doc.getCursor(),
+            line = this.doc.getLine(cursor.line),
+            emptyLine = line.length === 0,
+            isLastLine = this.state.text.split('\n').length - 1 == cursor.line,
+            brBefore = emptyLine || !isLastLine ? '' : '\n',
+            brAfter = isLastLine ? '' : '\n'
+
+        if (!emptyLine) {
+            this.doc.setCursor({ line: cursor.line + 1, ch: 0 })
+        }
+        this.doc.replaceSelection(brBefore + holders.map(holder => `![](${holder})`).join('\n') + brAfter)
+        requestAnimationFrame(() => {
+            if (!isLastLine) {
+                this.doc.setCursor(this.doc.posFromIndex(this.doc.indexFromPos(this.doc.getCursor()) - 1))
+            }
+        })
+    }
+    replaceImageHolder(tasks: UploadTask[]) {
+        for (let task of tasks) {
+            if (task.state === 0) {
+                continue
+            }
+            const match = this.state.text.match(new RegExp(`\\\!\\\[(.*)\\\]\\\(${task.id}\\\)`))
+            if (!match) {
+                continue
+            }
+
+            interactions.uploadCheck(task.id)
+            const
+                pos = this.doc.posFromIndex(this.state.text.indexOf(match[0])),
+                url = task.state === 1 ? task.value : 'fail'
+
+            this.doc.replaceRange(`![${match[1]}](${url})`, pos, { ...pos, ch: pos.ch + match[0].length })
+        }
+    }
     render() {
         const
             { classes } = this.props,
             readonly = propsReadonly(this.props),
-            relativeBlogs = this.props.blogs.filter(b => b.noteid === this.props.currentNote)
-        return <div className={classes.container} onKeyDown={this.onKeySave}>
+            relativeBlogs = this.props.blogs.filter(b => b.noteid === this.props.currentNote),
+            coverClass = this.state.isDragOver ? classes.uploadCover : classes.hidden
+
+        return <div
+            className={classes.container}
+            onKeyDown={this.onKeySave}
+            onDragEnter={this.handleDragEnter}
+            ref="root"
+        >
             <header className={classes.header}>
                 <input
                     className={classes.title}
@@ -246,12 +353,6 @@ class Editor extends React.Component<EditorProps, EditorState> {
                         >
                             发布新作
                         </MenuItem>
-                        {/* <MenuItem
-                            onClick={() => 1}
-
-                        >
-                            更新至...
-                        </MenuItem> */}
                         {
                             relativeBlogs.length
                                 ? [
@@ -262,7 +363,7 @@ class Editor extends React.Component<EditorProps, EditorState> {
                                         onClick={this.handleEditToBlog}
                                         disabled={isBlogBusy(blog.id, this.props.loadings)}
                                     >
-                                        更新至 {blog.title} ({blog.createAt})
+                                        更新至 {blog.title} ({timeFormat(new Date(blog.createAt), "yyyy-m-d hh:MM")})
                                     </MenuItem>)
                                 ]
                                 : null
@@ -275,6 +376,12 @@ class Editor extends React.Component<EditorProps, EditorState> {
                 <Grid item xs={6} lg={6}>
                     <Paper>
                         <CodeMirror
+                            ref={"codeMirror"}
+                            editorDidMount={e => {
+                                this.doc = e
+                                this.doc.focus()
+                            }}
+                            // autoFocus={true}
                             className={classes.editor}
                             value={this.state.text}
                             onBeforeChange={(editor, metadata, change) => this.setState({ text: change })}
@@ -306,6 +413,12 @@ class Editor extends React.Component<EditorProps, EditorState> {
                     </Paper>
                 </Grid>
             </Grid>
+            <div
+                className={coverClass}
+                onDragLeave={this.handleDragLeave}
+                onDragOver={e => e.preventDefault()}
+                onDrop={this.handleDrop}
+            ></div>
         </div>
     }
 }

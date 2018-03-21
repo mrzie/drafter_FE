@@ -395,14 +395,35 @@ export const setPreference = async (p: Preference) => {
 }
 
 export const editPassword = async (oldPassword: string, newPassword: string) => {
-    dispatch({type: Types.EDITPASSWORD_START})
-    const [_, err]: Expect<simpleMessage> = await handle(axios.post('/admin/editPassword', {oldPassword, newPassword}))
+    dispatch({ type: Types.EDITPASSWORD_START })
+    const [_, err]: Expect<simpleMessage> = await handle(axios.post('/admin/editPassword', { oldPassword, newPassword }))
     if (err != null) {
         dispatch({ type: Types.EDITPASSWORD_FAIL })
         return Promise.reject(err)
     } else {
         dispatch({ type: Types.EDITPASSWORD_SUCCESS })
         return true
+    }
+}
+
+interface uploadImageResponse {
+    url: string
+}
+
+// let uploadImageCounter = +new Date()
+export const uploadImage = async (f: File, id: string) => {
+    const
+        form = new FormData(),
+        config = { headers: { 'Content-type': 'multipart/formData' } }
+        // id = (uploadImageCounter++).toString()
+    form.append('file', f, f.name)
+    dispatch({ type: Types.UPLOAD_START, id })
+
+    const [result, err]: Expect<uploadImageResponse> = await handle(axios.post('/admin/uploadImage', form, config))
+    if (err != null) {
+        dispatch({ type: Types.UPLOAD_FAIL, id })
+    } else {
+        dispatch({ type: Types.UPLOAD_SUCCESS, id, value: result.url })
     }
 }
 
