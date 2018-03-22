@@ -3,7 +3,7 @@ import { match as Match } from 'react-router'
 import { Link } from 'react-router-dom'
 import { History } from 'history'
 import { timeFormat } from './utils'
-import { Blog } from './models'
+import { Blog, Basic } from './models'
 
 interface BlogViewProps {
     id: string,
@@ -12,6 +12,8 @@ interface BlogViewProps {
     blogs: Blog[],
     fetchBlog: (id: string) => Promise<any>,
 }
+
+declare let __basic: Basic
 
 export default class BlogView extends React.Component<BlogViewProps> {
     blog: Blog = null
@@ -36,12 +38,13 @@ export default class BlogView extends React.Component<BlogViewProps> {
 
         this.blog = blog
         if (!blog) {
+            document.title = 'Loading...'            
             return props.fetchBlog(id)
         }
-
         // 好，这里拿到文章了
         if (this.props == props || this.props.id != props.id) {
             window.scrollTo(0, 0)
+            document.title = `${blog.title} | ${__basic.sitename}`
         }
     }
 

@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { render } from 'react-dom'
-import { BrowserRouter, Switch, Route, Redirect ,Link} from 'react-router-dom'
+import { BrowserRouter, Switch, Route, Redirect, Link } from 'react-router-dom'
 import { match as Match } from 'react-router'
 import { History } from 'history'
 import { State, Tag, Blog, Basic, List } from './models'
@@ -110,17 +110,11 @@ class Main extends React.Component<null, State> {
 
     fetchList = async (tag: string, p: number) => {
         const loading_key = `list.${tag}.${p}`
-        // const
-        //     key = `${tag}.${p}`,
-        //     loading_key = `list.${key}`
+
         if (this.state.loadings.indexOf(loading_key) > -1) {
             console.log('出错！')
             return
         }
-        // if (this.state.loadings.indexOf(loading_key) > -1) {
-        //     console.warn('出错！');
-        //     return
-        // }
 
         const showTag = tag && this.state.tags.findIndex(t => t.name == tag) == -1 || undefined
 
@@ -182,35 +176,6 @@ class Main extends React.Component<null, State> {
 
             return Promise.reject(err)
         }
-        // if (ok) {
-        //     const lists = excludeFunc(this.state.lists, l => l.query == key),
-        //         syncAt = +new Date()
-        //     lists.push({
-        //         query: key,
-        //         syncAt,
-        //         blogs: result.blogs.map(b => b.id)
-        //     })
-        //     this.setState({
-        //         lists,
-        //         blogs: upsertBlogCache(
-        //             this.state.blogs,
-        //             result.blogs.map(b => ({ ...b, abstract: generateAbstract(b) })),
-        //             syncAt
-        //         ),
-        //     })
-        //     if (showTag) {
-        //         this.setState({
-        //             tags: upsertItem(
-        //                 this.state.tags,
-        //                 t => t.name == result.tag.name,
-        //                 result.tag
-        //             ),
-        //             // tagsSyncAt: syncAt,
-        //         })
-        //     }
-        // } else {
-        //     return Promise.reject(err)
-        // }
     }
 
 
@@ -282,15 +247,6 @@ class Main extends React.Component<null, State> {
                                     tag={null}
                                     blogs={blogs}
                                 />
-                                // return <ListView
-                                //     tag={null}
-                                //     tagname=""
-                                //     loadings={this.state.loadings}
-                                //     lists={this.state.lists}
-                                //     fetchList={this.fetchList}
-                                //     history={history}
-                                //     blogs={this.state.blogs}
-                                // />
                             }}
                         />
                         <Route
@@ -345,6 +301,7 @@ class Main extends React.Component<null, State> {
                         <Route
                             path="/error"
                             component={() => <div> not found</div>}
+                            ref={() => document.title=`出错啦！ - ${__basic.sitename}`}
                         />
                         <Route
                             component={() => <Redirect to="/error" />}

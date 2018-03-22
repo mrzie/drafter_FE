@@ -3,33 +3,25 @@ import { match as Match } from 'react-router'
 import { Link } from 'react-router-dom'
 import { History } from 'history'
 import { timeFormat } from './utils'
-import { List, Tag, Blog } from './models'
+import { List, Tag, Blog, Basic } from './models'
 import { parse as _marked } from 'marked'
 
 interface ListViewProps {
-    // match: Match<{ tag: string }>,
     history: History,
     nextPage: number,
     tag: Tag,
     tagname: string,
-    // tagname: string,
-    // lists: List[],
-    // loadings: string[],
     loading: boolean,
-    // page: string,
     blogs: Blog[],
     fetchList: (tag: string, page: number) => Promise<any>,
 }
+declare let __basic: Basic
 
 export default class ListView extends React.Component<ListViewProps> {
-    // loading: boolean = false
-    // list: List = null
-    // nextPage: number = 1
-    // blogs: Blog[]
     componentWillMount() {
         this.compute(this.props)
         document.addEventListener('scroll', this.handleScroll)
-        window.scrollTo(0, 0)        
+        window.scrollTo(0, 0)
     }
 
     componentWillUnmount() {
@@ -68,6 +60,11 @@ export default class ListView extends React.Component<ListViewProps> {
             return
         }
 
+        if (this.props == props || this.props.tagname != props.tagname) {
+            // 是初始化，或者修改了tagname
+            document.title = props.tagname ? `『${props.tagname}』 - ${__basic.sitename}` : __basic.sitename
+        }
+
         if (!props.blogs) {
             // 这里list没拿到，可能是请求失败了，可能是刚切换过来还没请求
             // 我真希望用户不要玩url，但是web端这是不可能的吧
@@ -75,7 +72,7 @@ export default class ListView extends React.Component<ListViewProps> {
                 // 同一篇文章，Loading已经不转了，然而你还是没有内容
                 // 大概是废了
                 // 跳404吧
-                debugger
+                // debugger
                 return this.props.history.push('/error')
             }
             // if (this.props.nextPage != 1) {
@@ -86,43 +83,9 @@ export default class ListView extends React.Component<ListViewProps> {
         }
 
         // 好，这里拿到文章了
-        if ( this.props.tagname != props.tagname) {
+        if (this.props.tagname != props.tagname) {
             window.scrollTo(0, 0)
         }
-
-        // const tagname = props.tagname || ''
-        // this.list = props.lists.find(l => l.query == tagname)
-
-        // if (!this.list) {
-        //     this.nextPage = 1
-        // } else {
-        //     const next = this.list.blogs.length + 1
-        //     if (next >= this.list.count) {
-
-        //     }
-        // }
-
-        // this.loading = props.loadings.indexOf(`list.${this.props.tagname}.${this.nextPage}`) > -1
-        // if (this.loading) {
-        //     return
-        // }
-
-        // // const query = `${this.props.tagname}.${p}`
-        // // this.list = this.props.lists.find(l => l.query == query)
-        // if (!this.list) {
-        //     if (props != this.props) {
-        //         // 这里是nextProps
-        //         // 而且博客还是没拿到
-        //         // 大概是废了
-        //         // 理论上只有当请求结束，loadings改变并且请求失败才会触发该条件
-        //         // 跳404吧
-        //         this.props.history.push('/error')
-        //         return
-        //     } else {
-        //         // 冷静一点，只是还没请求
-        //         this.props.fetchList(this.props.tagname, p)
-        //     }
-        // }
     }
 
     render() {
