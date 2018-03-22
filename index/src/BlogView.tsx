@@ -81,6 +81,9 @@ export default class BlogView extends React.Component<BlogViewProps> {
                         className="blog-content"
                         dangerouslySetInnerHTML={{ __html: blog.content || '' }}
                         ref={el => {
+                            if (!el) {
+                                return
+                            }
                             // 我也不知道为什么一定要节点操作
                             // 为什么google的prettyprint也用了这么麻烦的写法
                             // fine
