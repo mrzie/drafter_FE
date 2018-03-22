@@ -200,7 +200,31 @@ h1, h2, h3, h4, h5, h6 {
     font-size: .85em;
 }
 
-.blog-content ul,.blog-content ol {
+.blog-content ul, .blog-content ol {
     padding: 0;
     margin: 0 0 10px 25px;
+}
+
+.blog-content table {
+    width: 100%;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    border-spacing: 0;
+}
+
+.blog-content tbody>tr:nth-child(2n+1)>td, .blog-content tbody>tr:nth-child(2n+1)>th {
+    background-color: rgba(102, 147, 153, 0.05);
+}
+
+.blog-content tr td {
+    border-top: 1px solid #ddd;
+}
+
+.blog-content td, .blog-content th {
+    border-left: 1px solid #ddd;
+    /* background-color: rgba(255, 255, 255, 0.05); */
+}
+
+.blog-content td:first-child, .blog-content th:first-child {
+    border-left: none;
 }
