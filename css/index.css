@@ -61,6 +61,44 @@ h1, h2, h3, h4, h5, h6 {
     max-width: 100%;
 }
 
+.blog-content blockquote {
+    border-color: #d7e0df;
+    background: none repeat scroll 0 0 rgba(102, 153, 151, 0.05);
+    padding: 10px 15px;
+    border-left-style: solid;
+    border-left-width: 10px;
+    margin: 0 0 20px;
+}
+
+.blog-content pre {
+    font-size: .87em;
+    padding: 10px 15px;
+    background: none repeat scroll 0 0 rgba(102, 153, 151, 0.05);
+    display: block;
+    line-height: 20px;
+    word-break: break-all;
+    word-wrap: break-word;
+    white-space: pre;
+    white-space: pre-wrap;
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+}
+
+.blog-content code {
+    background-color: #d7dfe0;
+    border-radius: 4px;
+    color: #2b4b4f;
+    padding: 2px 4px;
+    white-space: nowrap;
+}
+
+.blog-content pre>code {
+    background: transparent;
+    padding: 0;
+    white-space: inherit;
+}
+
 .list-blog-time, .blog-time {
     color: #0aa69e;
     font-size: .85em;
