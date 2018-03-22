@@ -79,7 +79,7 @@ export default class ListView extends React.Component<ListViewProps> {
             //     // 那你的意思是我的代码写得有问题咯？
             // }
             // 冷静一点，只是还没请求
-            return this.props.fetchList(this.props.tagname, 1)
+            return this.props.fetchList(props.tagname, 1)
         }
 
         // 好，这里拿到文章了
