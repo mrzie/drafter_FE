@@ -15,6 +15,10 @@ interface BlogViewProps {
 
 declare let __basic: Basic
 
+declare let PR: {
+    prettyPrint: () => void
+}
+
 export default class BlogView extends React.Component<BlogViewProps> {
     blog: Blog = null
 
@@ -38,7 +42,7 @@ export default class BlogView extends React.Component<BlogViewProps> {
 
         this.blog = blog
         if (!blog) {
-            document.title = 'Loading...'            
+            document.title = 'Loading...'
             return props.fetchBlog(id)
         }
         // 好，这里拿到文章了
@@ -73,7 +77,37 @@ export default class BlogView extends React.Component<BlogViewProps> {
                 <article className="blog-container">
                     <div className="blog-title">{blog.title}</div>
                     <div className="blog-time">{timeContent}</div>
-                    <div className="blog-content" dangerouslySetInnerHTML={{ __html: blog.content || '' }} ></div>
+                    <div
+                        className="blog-content"
+                        dangerouslySetInnerHTML={{ __html: blog.content || '' }}
+                        ref={el => {
+                            // 我也不知道为什么一定要节点操作
+                            // 为什么google的prettyprint也用了这么麻烦的写法
+                            // fine
+                            const list: HTMLPreElement[] = []
+                            el.querySelectorAll('pre').forEach(pre => {
+                                const child = pre.firstElementChild
+                                if (child && child.nodeName === 'CODE' && child.className) {
+                                    pre.classList.add('prettyprint')
+                                    list.push(pre)
+                                }
+                            })
+                            if (PR) {
+                                PR.prettyPrint()
+                                list.forEach(pre => {
+                                    const nums = document.createElement('div')
+                                    nums.classList.add('linenums-wrapper')
+                                    nums.innerText = pre.querySelector('code').innerText.split('\n').map((_, index) => index + 1 + '.').join('\n')
+                                    pre.insertBefore(nums, pre.firstChild)
+                                })
+                                // 好吧代码到这里已经非常丑了
+                                // 想要实现一行代码过长的时候左右滚动而不是换行 + 行号位置固定不滚动
+                                // 最后写了个flex布局。。
+                                // 本来想让窄屏幕下隐藏行号，不过看了一下iphone SE的宽度都能放得下
+                                // fine
+                            }
+                        }}
+                    ></div>
                     <div className="blog-tags">
                         {blog.tags.map(t => <Link to={`/tag/${t}`} className="blog-tag" key={t}>{t}</Link>)}
                     </div>

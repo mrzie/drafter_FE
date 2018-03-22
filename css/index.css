@@ -99,6 +99,11 @@ h1, h2, h3, h4, h5, h6 {
     white-space: inherit;
 }
 
+.blog-content pre.prettyprint code {
+    background: transparent;
+    white-space: pre;
+}
+
 .list-blog-time, .blog-time {
     color: #0aa69e;
     font-size: .85em;
@@ -193,4 +198,9 @@ h1, h2, h3, h4, h5, h6 {
 .tag-description {
     margin: 10px 0;
     font-size: .85em;
+}
+
+.blog-content ul,.blog-content ol {
+    padding: 0;
+    margin: 0 0 10px 25px;
 }
