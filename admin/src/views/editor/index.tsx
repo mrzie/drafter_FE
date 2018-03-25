@@ -10,8 +10,9 @@ import { State, Note, TempNote, Notebook, Blog, UploadTask } from '../../model'
 import * as interactions from '../../interactions'
 import { Delete, Save, Publish, /* did you fix publish?*/ } from 'material-ui-icons'
 import * as api from '../../api'
-import { marked, isTempIdPrefixed, isBlogBusy, timeFormat } from '../../utils'
+import { marked, isTempIdPrefixed } from '../../utils'
 import uploadCounter from './uploadCounter'
+import PublishMenu from './publishMenu'
 
 const mapStateToProps = (state: State, ownProps: { classes: any, theme?: any }) => {
     const blank = {
@@ -148,13 +149,6 @@ class Editor extends React.Component<EditorProps, EditorState> {
             this.initInputAreas(next)
         }
 
-        // 检查是否有已经上传成功或失败的图片
-        // const matched = next.uploadQueue.filter(task => {
-        //     if (task.state === 0) {
-        //         return
-        //     }
-        //     task.id
-        // })
         this.replaceImageHolder(next.uploadQueue)
     }
     componentWillUnmount() {
@@ -177,9 +171,13 @@ class Editor extends React.Component<EditorProps, EditorState> {
         this.setState({ publishMenuOpen: false })
     }
     onKeySave: React.EventHandler<React.KeyboardEvent<HTMLDivElement>> = (e) => {
+        const focused = this.doc.hasFocus()
         if (e.keyCode == 83 && (e.ctrlKey || e.metaKey)) {
             e.preventDefault()
             this.saveNote()
+            if (focused) {
+                this.doc.focus()
+            }
         }
     }
     syncScroll(data: CodeMirror.ScrollInfo) {
@@ -204,13 +202,10 @@ class Editor extends React.Component<EditorProps, EditorState> {
         await api.saveNote(noteid)
         api.composeBlog(noteid)
     }
-    handleEditToBlog: React.MouseEventHandler<HTMLButtonElement | HTMLAnchorElement | HTMLLIElement> = async e => {
+    handleEditToBlog = async (id: string, noteid: string) => {
         if (propsReadonly(this.props)) {
             return
         }
-        const
-            id = e.currentTarget.getAttribute('data-id'),
-            noteid = this.props.currentNote
 
         this.closePublishMenu()
 
@@ -280,6 +275,8 @@ class Editor extends React.Component<EditorProps, EditorState> {
     replaceImageHolder(tasks: UploadTask[]) {
         for (let task of tasks) {
             if (task.state === 0) {
+                // 还在上传的就接着传吧别瞎掺和了
+                // 这里是准备把已经确定上传成功或者失败的拎出来
                 continue
             }
             const match = this.state.text.match(new RegExp(`\\\!\\\[(.*)\\\]\\\(${task.id}\\\)`))
@@ -299,7 +296,6 @@ class Editor extends React.Component<EditorProps, EditorState> {
         const
             { classes } = this.props,
             readonly = propsReadonly(this.props),
-            relativeBlogs = this.props.blogs.filter(b => b.noteid === this.props.currentNote),
             coverClass = this.state.isDragOver ? classes.uploadCover : classes.hidden
 
         return <div
@@ -342,33 +338,15 @@ class Editor extends React.Component<EditorProps, EditorState> {
                             <Publish />
                         </IconButton>
                     </Tooltip>
-                    <Menu
+                    <PublishMenu
                         open={!readonly && this.state.publishMenuOpen}
                         onRequestClose={this.closePublishMenu}
                         anchorEl={this.publishEl}
-                    >
-                        <MenuItem
-                            onClick={this.publishNewBlog}
-                            disabled={this.props.isComposing}
-                        >
-                            发布新作
-                        </MenuItem>
-                        {
-                            relativeBlogs.length
-                                ? [
-                                    <Divider key="divider" />,
-                                    ...relativeBlogs.map(blog => <MenuItem
-                                        key={blog.id}
-                                        data-id={blog.id}
-                                        onClick={this.handleEditToBlog}
-                                        disabled={isBlogBusy(blog.id, this.props.loadings)}
-                                    >
-                                        更新至 {blog.title} ({timeFormat(new Date(blog.createAt), "yyyy-m-d hh:MM")})
-                                    </MenuItem>)
-                                ]
-                                : null
-                        }
-                    </Menu>
+                        isComposing={this.props.isComposing}
+                        noteid={this.props.currentNote}
+                        onPublish={this.publishNewBlog}
+                        onEditToBlog={this.handleEditToBlog}
+                    />
                 </div>
             </header>
             <TagEditor tags={this.state.tags} onChange={tags => this.setState({ tags })} readonly={readonly} />

@@ -7,6 +7,7 @@ import { State, Tag, Blog, Basic, List } from './models'
 import get from './get'
 import BlogView from './BlogView'
 import ListView from './ListView'
+import ErrorView from './ErrorView'
 
 const Header = () => <header className="header">
     <div className="container">
@@ -300,8 +301,8 @@ class Main extends React.Component<null, State> {
                         />
                         <Route
                             path="/error"
-                            component={() => <div> not found</div>}
-                            ref={() => document.title=`出错啦！ - ${__basic.sitename}`}
+                            component={ErrorView}
+                            ref={() => document.title = `出错啦！ - ${__basic.sitename}`}
                         />
                         <Route
                             component={() => <Redirect to="/error" />}
@@ -311,7 +312,7 @@ class Main extends React.Component<null, State> {
                 <footer className="footer">
                     <div className="container">
                         Copyright © 2014-2018  Mr.ZiE | All Rights Reserved.<br />
-                        mrzie@outlook.com&nbsp;
+                        mrzie@outlook.com&nbsp;闽ICP备18004270号
                     </div>
                 </footer>
             </div>

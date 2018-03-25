@@ -399,7 +399,7 @@ const blogs: Reducer<Blog[]> = (state = [], actions: Action) => {
                 }
             }, state)
         case Types.NEWBLOG_SUCCESS:
-            return [...state, actions.blog]
+            return [actions.blog, ...state]
         case Types.EDITBLOG_SUCCESS:
             return replaceItem(
                 state,

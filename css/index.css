@@ -129,12 +129,15 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .list-blog-readmore {
-    color: #0aa69e;
     display: inline-block;
+}
+
+.cyan-link, .blog-content a {
+    color: #0aa69e;
     transition: color .2s ease-in-out;
 }
 
-.list-blog-readmore:hover {
+.cyan-link:hover, .blog-content a:hover {
     color: rgba(10, 166, 158, .57);
 }
 
@@ -228,4 +231,8 @@ h1, h2, h3, h4, h5, h6 {
 
 .blog-content td:first-child, .blog-content th:first-child {
     border-left: none;
+}
+
+.blog-content em {
+    color: #999;
 }

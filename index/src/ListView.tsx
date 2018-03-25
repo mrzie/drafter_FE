@@ -114,7 +114,7 @@ export default class ListView extends React.Component<ListViewProps> {
                                     className="list-blog-abstract"
                                     dangerouslySetInnerHTML={{ __html: blog.abstract || '' }}
                                 />
-                                <Link className="list-blog-readmore" to={`/blog/${blog.id}`}>阅读全文</Link>
+                                <Link className="list-blog-readmore cyan-link" to={`/blog/${blog.id}`}>阅读全文</Link>
                             </div>
                             <div className="list-blog-tags">
                                 {blog.tags.map(t => <Link to={`/tag/${t}`} className="list-blog-tag" key={t}>{t}</Link>)}

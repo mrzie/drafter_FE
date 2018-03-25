@@ -95,19 +95,23 @@ export default class BlogView extends React.Component<BlogViewProps> {
                                     list.push(pre)
                                 }
                             })
-                            if (PR) {
-                                PR.prettyPrint()
-                                list.forEach(pre => {
-                                    const nums = document.createElement('div')
-                                    nums.classList.add('linenums-wrapper')
-                                    nums.innerText = pre.querySelector('code').innerText.split('\n').map((_, index) => index + 1 + '.').join('\n')
-                                    pre.insertBefore(nums, pre.firstChild)
-                                })
-                                // 好吧代码到这里已经非常丑了
-                                // 想要实现一行代码过长的时候左右滚动而不是换行 + 行号位置固定不滚动
-                                // 最后写了个flex布局。。
-                                // 本来想让窄屏幕下隐藏行号，不过看了一下iphone SE的宽度都能放得下
-                                // fine
+                            try {
+                                if (PR) {
+                                    PR.prettyPrint()
+                                    list.forEach(pre => {
+                                        const nums = document.createElement('div')
+                                        nums.classList.add('linenums-wrapper')
+                                        nums.innerText = pre.querySelector('code').innerText.split('\n').map((_, index) => index + 1 + '.').join('\n')
+                                        pre.insertBefore(nums, pre.firstChild)
+                                    })
+                                    // 好吧代码到这里已经非常丑了
+                                    // 想要实现一行代码过长的时候左右滚动而不是换行 + 行号位置固定不滚动
+                                    // 最后写了个flex布局。。
+                                    // 本来想让窄屏幕下隐藏行号，不过看了一下iphone SE的宽度都能放得下
+                                    // fine
+                                }
+                            } catch (e) {
+
                             }
                         }}
                     ></div>

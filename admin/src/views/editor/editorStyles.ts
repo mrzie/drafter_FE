@@ -24,7 +24,7 @@ const styles: StyleRulesCallback = theme => ({
     },
     previewer: {
         padding: '10px',
-        overflow: 'scroll',
+        overflow: 'auto',
         boxSizing: 'border-box',
         height: 'calc(100vh - 85px)',
     },
