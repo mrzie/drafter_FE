@@ -96,6 +96,8 @@ if (!__basic) {
         sitename: `mrzie's blog`,
         domain: 'domain',
         intro: 'welcome to my website',
+        author: '',
+        ICP: '',
     }
 }
 
@@ -312,7 +314,7 @@ class Main extends React.Component<null, State> {
                 <footer className="footer">
                     <div className="container">
                         Copyright © 2014-2018  Mr.ZiE | All Rights Reserved.<br />
-                        mrzie@outlook.com&nbsp;闽ICP备18004270号
+                        mrzie@outlook.com&nbsp;{__basic.ICP}
                     </div>
                 </footer>
             </div>

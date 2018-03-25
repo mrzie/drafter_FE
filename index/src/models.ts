@@ -46,6 +46,8 @@ export interface Basic {
     sitename: string,
     domain: string,
     intro: string,
+    author: string, 
+    ICP: string,
 }
 
 export interface State {
