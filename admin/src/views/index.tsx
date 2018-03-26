@@ -14,7 +14,7 @@ import BlogsView from './blogsView'
 import BLogView from './blogsView/blogPreview'
 import TagsView from './tagsView'
 import * as api from '../api'
-import { Modals } from './modal'
+import { Modals, ModalRange } from './modal'
 import PreferenceView from './preferenceView'
 
 const mapStateToProps = (state: State) => ({
@@ -95,7 +95,6 @@ class layout extends React.Component<{ classes: any }>{
                     <Route path="/admin/preference" component={PreferenceView} />
                     <Route component={() => <Redirect to="/admin/notebook/" />} />
                 </Switch>
-                <Modals />
             </div>
         </div>
     }
@@ -103,9 +102,14 @@ class layout extends React.Component<{ classes: any }>{
 
 const Layout = withStyles(mainStyles)(layout)
 
-const App = (props: { logined: boolean }) => props.logined
-    ? <Layout />
-    : <LoginView />
+const App = (props: { logined: boolean }) => <div>
+
+    {props.logined
+        ? <Layout />
+        : <LoginView />}
+    <Modals />
+    <ModalRange id={0} />
+</div>
 
 
 export default withRouter(connect(mapStateToProps)(App))

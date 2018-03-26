@@ -5,7 +5,9 @@ import { marked } from '../utils'
 import { History } from 'history'
 import * as interactions from '../interactions'
 
-const { dispatch } = store
+const
+    { dispatch } = store,
+    { warn } = interactions
 
 export interface Exception {
     code: number,
@@ -21,10 +23,26 @@ export interface simpleMessage {
 
 type Expect<T> = [T, Exception]
 
-const handle = (pms: AxiosPromise) => pms.then(
+const _handle = (pms: AxiosPromise) => pms.then(
     res => [res.data, null],
     err => [null, err.response.data]
 ) as Promise<Expect<any>>
+
+const handle = async (pms: AxiosPromise) => {
+    const result = await _handle(pms),
+        err = result[1]
+    if (err && err.code >=400 && err.code < 500) {
+        interactions.modal('身份认证异常，请重新登录', [{
+            text: '确定', 
+            then: () => {
+                location.reload()
+                return false
+            }
+        }])
+        throw 401
+    }
+    return result
+}
 
 axios.defaults.baseURL = '/v1/'
 axios.defaults.headers.post['Content-Type'] = 'application/json'
@@ -45,9 +63,10 @@ const REJECTION = async (src: string | Object) => {
 export const login = async (password: string, exclusive: boolean) => {
     dispatch({ type: Types.LOGIN_START })
 
-    const [res, err] = await handle(axios.post('login', { password, exclusive }))
+    const [res, err] = await _handle(axios.post('/login', { password, exclusive }))
     if (err != null) {
         dispatch({ type: Types.LOGIN_FAIL, err })
+        warn("登录失败")
     } else if (res.code === 0) {
         dispatch({ type: Types.LOGIN_SUCCESS })
     }
@@ -56,10 +75,10 @@ export const login = async (password: string, exclusive: boolean) => {
 export const newbook = async (name: string) => {
     dispatch({ type: Types.NEWBOOK_START })
 
-    const [notebook, err]: Expect<Notebook> = await handle(axios.post('admin/notebook', { name }))
+    const [notebook, err]: Expect<Notebook> = await handle(axios.post('/admin/notebook', { name }))
     if (err != null) {
         dispatch({ type: Types.NEWBOOK_FAIL, err })
-        return REJECTION(err)
+        warn(`创建笔记本失败：${err.msg}`)
     } else {
         dispatch({ type: Types.NEWBOOK_SUCCESS, notebook })
     }
@@ -67,9 +86,10 @@ export const newbook = async (name: string) => {
 
 export const renameNotebook = async (id: string, name: string) => {
     dispatch({ type: Types.RENAMENOTEBOOK_START, id, name })
-    const [_, err]: Expect<simpleMessage> = await handle(axios.patch('admin/notebook', { id, name }))
+    const [_, err]: Expect<simpleMessage> = await handle(axios.patch('/admin/notebook', { id, name }))
     if (err != null) {
         dispatch({ type: Types.RENAMENOTEBOOK_FAIL, id, err })
+        warn(`重命名笔记本失败：${err.msg}`)
     } else {
         dispatch({ type: Types.RENAMENOTEBOOK_SUCCESS, id, name })
     }
@@ -77,9 +97,10 @@ export const renameNotebook = async (id: string, name: string) => {
 
 export const deleteNotebook = async (id: string) => {
     dispatch({ type: Types.DELETENOTEBOOK_START, id })
-    const [_, err]: Expect<simpleMessage> = await handle(axios.delete('admin/notebook', { data: { id } }))
+    const [_, err]: Expect<simpleMessage> = await handle(axios.delete('/admin/notebook', { data: { id } }))
     if (err != null) {
         dispatch({ type: Types.DELETENOTEBOOK_FAIL, id, err })
+        warn(`未能成功删除笔记本：${err.msg}`)
     } else {
         dispatch({ type: Types.DELETENOTEBOOK_SUCCESS, id })
     }
@@ -87,9 +108,10 @@ export const deleteNotebook = async (id: string) => {
 
 export const getNotebooks = async () => {
     dispatch({ type: Types.GETNOTEBOOKS_START })
-    const [notebooks, err]: Expect<Notebook[]> = await handle(axios.get('admin/notebooks'))
+    const [notebooks, err]: Expect<Notebook[]> = await handle(axios.get('/admin/notebooks'))
     if (err != null) {
         dispatch({ type: Types.GETNOTEBOOKS_FAIL, err })
+        warn(`获取笔记本列表失败，请刷新重试：${err.msg}`)
     } else {
         dispatch({ type: Types.GETNOTEBOOKS_SUCCESS, notebooks })
     }
@@ -110,6 +132,7 @@ export const newNote = async (notebookid: string, title = '', tags = [] as strin
     )
     if (err != null) {
         dispatch({ type: Types.NEWNOTE_FAIL, err, tempId })
+        warn(`创建新笔记失败：${err.msg}`)
         return Promise.reject(err)
     } else {
         dispatch({ type: Types.NEWNOTE_SUCCESS, note, tempId })
@@ -124,6 +147,7 @@ export const listNotes = async (notebookid: string) => {
     const [notes, err]: Expect<Note[]> = await handle(axios.get('/admin/notes', { params: { notebookid } }))
     if (err != null) {
         dispatch({ type: Types.LISTNOTES_FAIL, notebookid })
+        warn(`获取笔记列表失败：${err.msg}`)
     } else {
         dispatch({ type: Types.LISTNOTES_SUCCESS, notebookid, notes })
     }
@@ -137,7 +161,7 @@ export const getNote: (id: string) => Promise<Note> = async (id: string) => {
     const [notes, err]: Expect<Note[]> = await handle(axios.get('/admin/note', { params: { id } }))
     if (err != null || notes.length === 0) {
         dispatch({ type: Types.GETNOTE_FAIL, id })
-        return REJECTION(err)
+        warn(`获取笔记失败：${err.msg}`)
     } else {
         dispatch({ type: Types.GETNOTE_SUCCESS, id, note: notes[0] })
         return notes[0]
@@ -158,7 +182,7 @@ export const saveNote = async (id: string) => {
     const [_, err]: Expect<simpleMessage> = await handle(axios.patch(`/admin/note/${id}`, { title, content, tags }))
     if (err != null) {
         dispatch({ type: Types.EDITNOTE_FAIL, id })
-        return REJECTION("保存笔记失败")
+        warn(`保存笔记失败：${err.msg}`)
     } else {
         dispatch({ type: Types.EDITNOTE_SUCCESS, id })
         return
@@ -171,18 +195,21 @@ export const moveNote = async (id: string, notebookid: string) => {
         note = (state.notes as Note[]).find(n => n.id == id)
 
     if (!note) {
-        return REJECTION("笔记不存在")
+        warn('笔记不存在')
+        return
     }
     const notebook = state.notebooks.find(b => b.id === notebookid)
 
     if (!notebook) {
         // 目标笔记本不存在
-        return REJECTION("目标笔记本不存在")
+        warn('目标笔记本不存在')
+        return
     }
     dispatch({ type: Types.MOVENOTE_START, id, notebookid })
     const [_, err]: Expect<simpleMessage> = await handle(axios.patch(`admin/note/${id}`, { notebookid }))
     if (err != null) {
         dispatch({ type: Types.MOVENOTE_FAIL, id, notebookid })
+        warn(`移动笔记失败：${err.msg}`)
     } else {
         dispatch({ type: Types.MOVENOTE_SUCCESS, id, notebookid })
     }
@@ -199,6 +226,7 @@ export const deleteNote = async (id: string) => {
     const [_, err]: Expect<simpleMessage> = await handle(axios.delete(`/admin/note/${id}`))
     if (err != null) {
         dispatch({ type: Types.DELETENOTE_FAIL, id, err })
+        warn(`删除笔记失败：${err.msg}`)
     } else {
         dispatch({ type: Types.DELETENOTE_SUCCESS, id, note })
     }
@@ -209,6 +237,7 @@ export const getWasteNotes = async () => {
     const [notes, err]: Expect<Note[]> = await handle(axios.get('/admin/wastenote'))
     if (err != null) {
         dispatch({ type: Types.GETWASTENOTES_FAIL, err })
+        warn(`获取笔记列表失败：${err.msg}`)
     } else {
         dispatch({ type: Types.GETWASTENOTES_SUCCESS, notes })
     }
@@ -219,6 +248,7 @@ export const restoreNoteTo = async (id: string, notebookid: string) => {
     const [_, err]: Expect<simpleMessage> = await handle(axios.patch(`/admin/note/${id}`, { notebookid, alive: true }))
     if (err != null) {
         dispatch({ type: Types.RESTOREWASTENOTE_FAIL, id, err })
+        warn(`未能成功还原笔记：${err.msg}`)
     } else {
         dispatch({ type: Types.RESTOREWASTENOTE_SUCCESS, id, notebookid })
     }
@@ -228,11 +258,6 @@ export const composeBlog = async (noteid: string) => {
     const state = store.getState(),
         note = (state.notes as Note[]).find(n => n.id === noteid) || await getNote(noteid)
 
-    // let note = (state.notes as Note[]).find(n => n.id === noteid)
-
-    // if (!note) {
-    //     note = await getNote(noteid)
-    // }
     dispatch({ type: Types.NEWBLOG_START, noteid })
 
     const {
@@ -251,6 +276,7 @@ export const composeBlog = async (noteid: string) => {
 
     if (err != null) {
         dispatch({ type: Types.NEWBLOG_FAIL, noteid, err })
+        warn(`发布失败：${err.msg}`)
     } else {
         dispatch({ type: Types.NEWBLOG_SUCCESS, noteid, blog })
     }
@@ -261,6 +287,7 @@ export const getBlogs = async () => {
     const [blogs, err]: Expect<Blog[]> = await handle(axios.get('/admin/blogs'))
     if (err != null) {
         dispatch({ type: Types.GETBLOGS_FAIL, err })
+        warn(`获取博客列表失败：${err.msg}`)
     } else {
         dispatch({ type: Types.GETBLOGS_SUCCESS, blogs })
     }
@@ -277,6 +304,7 @@ export const getBlog = async (ids: string[]) => {
     const [blogs, err]: Expect<Blog> = await handle(axios.get(`/admin/blog?id=${ids.join(',')}`))
     if (err != null) {
         dispatch({ type: Types.GETBLOG_FAIL, ids, err })
+        warn(`未能成功获取博客内容：${err.msg}`)
     } else {
         dispatch({ type: Types.GETBLOG_SUCCESS, blogs, ids })
     }
@@ -287,12 +315,14 @@ export const editBlog = async (id: string, noteid: string) => {
         note = (state.notes as Note[]).find(n => n.id === noteid)
 
     if (!note) {
-        return REJECTION('未找到笔记')
+        warn('未找到笔记')
+        return
     }
 
     if (note.content === undefined) {
         // 未加载的note
-        return REJECTION('笔记状态不正确')
+        warn('笔记状态不正确')
+        return
     }
 
     dispatch({ type: Types.EDITBLOG_START, id, noteid })
@@ -308,6 +338,7 @@ export const editBlog = async (id: string, noteid: string) => {
 
     if (err != null) {
         dispatch({ type: Types.EDITBLOG_FAIL, id, noteid })
+        warn(`未能成功编辑博客：${err.msg}`)        
     } else {
         dispatch({ type: Types.EDITBLOG_SUCCESS, id, noteid, edition })
     }
@@ -328,6 +359,7 @@ export const activateBlog = async (id: string, alive: boolean) => {
     const [_, err]: Expect<simpleMessage> = await handle(axios.put(`/admin/blog/${id}`, { alive }))
     if (err != null) {
         dispatch({ type: Types.ACTIVATEBLOG_FAIL, id, alive })
+        warn(`未能成功编辑博客：${err.msg}`)
     } else {
         dispatch({ type: Types.ACTIVATEBLOG_SUCCESS, id, alive })
     }
@@ -351,7 +383,7 @@ export const getTags = async () => {
     const [tags, err]: Expect<Tag[]> = await handle(axios.get('/admin/tags'))
     if (err != null) {
         dispatch({ type: Types.GETTAGS_FAIL })
-        return Promise.reject(err)
+        warn(`获取tags失败：${err.msg}`)
     } else {
         dispatch({ type: Types.GETTAGS_SUCCESS, tags })
         return true
@@ -363,7 +395,7 @@ export const deleteTag = async (name: string) => {
     const [_, err]: Expect<simpleMessage> = await handle(axios.delete(`/admin/tag/${name}`))
     if (err != null) {
         dispatch({ type: Types.DELETETAG_FAIL, name })
-        return Promise.reject(err)
+        warn(`编辑tag失败：${err.msg}`)
     } else {
         dispatch({ type: Types.DELETETAG_SUCCESS, name })
         return true
@@ -375,7 +407,7 @@ export const editTag = async (name: string, description: string) => {
     const [_, err]: Expect<simpleMessage> = await handle(axios.put('/admin/describe-tag', { name, description }))
     if (err != null) {
         dispatch({ type: Types.EDITTAG_FAIL, name })
-        return Promise.reject(err)
+        warn(`编辑tag失败：${err.msg}`)
     } else {
         dispatch({ type: Types.EDITTAG_SUCCESS, name, description })
         return true
@@ -387,7 +419,7 @@ export const setPreference = async (p: Preference) => {
     const [_, err]: Expect<simpleMessage> = await handle(axios.put('/admin/user-preference', p))
     if (err != null) {
         dispatch({ type: Types.SETPREFERENCE_FAIL })
-        return Promise.reject(err)
+        warn(`配置失败：${err.msg}`)
     } else {
         dispatch({ type: Types.SETPREFERENCE_SUCCESS, preference: p })
         return true
@@ -399,7 +431,7 @@ export const editPassword = async (oldPassword: string, newPassword: string) => 
     const [_, err]: Expect<simpleMessage> = await handle(axios.post('/admin/editPassword', { oldPassword, newPassword }))
     if (err != null) {
         dispatch({ type: Types.EDITPASSWORD_FAIL })
-        return Promise.reject(err)
+        warn(`修改密码失败：${err.msg}`)
     } else {
         dispatch({ type: Types.EDITPASSWORD_SUCCESS })
         return true
@@ -415,7 +447,7 @@ export const uploadImage = async (f: File, id: string) => {
     const
         form = new FormData(),
         config = { headers: { 'Content-type': 'multipart/formData' } }
-        // id = (uploadImageCounter++).toString()
+    // id = (uploadImageCounter++).toString()
     form.append('file', f, f.name)
     dispatch({ type: Types.UPLOAD_START, id })
 

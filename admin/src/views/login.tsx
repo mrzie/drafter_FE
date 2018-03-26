@@ -4,7 +4,6 @@ import { Grid, TextField, Switch, Button, Paper } from 'material-ui'
 import { withStyles, StyleRulesCallback } from 'material-ui/styles'
 import { FormControlLabel } from 'material-ui/Form'
 import { login as loginRequest } from '../api'
-
 const styles: StyleRulesCallback = theme => ({
     paper: {
         padding: '30px',

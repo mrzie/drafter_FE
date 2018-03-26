@@ -114,7 +114,7 @@ class PreferenceView extends React.Component<PreferenceViewProps, PreferenceView
                             isPassword: true,
                             holder: '输入新密码',
                         },
-                    }}
+                    } as Fields<any>}
 
                     actions={{
                         修改密码: {
@@ -151,7 +151,7 @@ class PreferenceView extends React.Component<PreferenceViewProps, PreferenceView
                             name: '每页显示文章数',
                             initValue: preference.pageSize,
                         },
-                    } as Fields<PreferenceInput>}
+                    } as Fields<any>}
 
                     actions={{
                         保存: {
