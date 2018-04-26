@@ -161,7 +161,7 @@ class Editor extends React.Component<EditorProps, EditorState> {
     }
     saveNote = () => {
         this.cacheNote()
-        api.saveNote(this.props.currentNote)
+        return api.saveNote(this.props.currentNote)
     }
     openPublishMenu = (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>) => {
         this.setState({ publishMenuOpen: true })
@@ -174,10 +174,11 @@ class Editor extends React.Component<EditorProps, EditorState> {
         const focused = this.doc.hasFocus()
         if (e.keyCode == 83 && (e.ctrlKey || e.metaKey)) {
             e.preventDefault()
-            this.saveNote()
-            if (focused) {
-                this.doc.focus()
-            }
+            this.saveNote().then(() => {
+                if (focused && this.doc) {
+                    this.doc.focus()
+                }
+            })
         }
     }
     syncScroll(data: CodeMirror.ScrollInfo) {
@@ -357,7 +358,7 @@ class Editor extends React.Component<EditorProps, EditorState> {
                             ref={"codeMirror"}
                             editorDidMount={e => {
                                 this.doc = e
-                                this.doc.focus()
+                                // this.doc.focus()
                             }}
                             // autoFocus={true}
                             className={classes.editor}

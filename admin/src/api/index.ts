@@ -31,9 +31,9 @@ const _handle = (pms: AxiosPromise) => pms.then(
 const handle = async (pms: AxiosPromise) => {
     const result = await _handle(pms),
         err = result[1]
-    if (err && err.code >=400 && err.code < 500) {
+    if (err && err.code >= 400 && err.code < 500) {
         interactions.modal('身份认证异常，请重新登录', [{
-            text: '确定', 
+            text: '确定',
             then: () => {
                 location.reload()
                 return false
@@ -338,7 +338,7 @@ export const editBlog = async (id: string, noteid: string) => {
 
     if (err != null) {
         dispatch({ type: Types.EDITBLOG_FAIL, id, noteid })
-        warn(`未能成功编辑博客：${err.msg}`)        
+        warn(`未能成功编辑博客：${err.msg}`)
     } else {
         dispatch({ type: Types.EDITBLOG_SUCCESS, id, noteid, edition })
     }
