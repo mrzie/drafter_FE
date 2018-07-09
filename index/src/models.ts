@@ -36,6 +36,16 @@ export interface Blog {
     editAt: number,
     abstract?: string,
     syncAt?: number,
+    // comments?: Comment[],
+}
+
+export interface Comment {
+    id: string,
+    ref: string,
+    user: string,
+    time: number,
+    content: string,
+    state: number,
 }
 
 export interface TagCloud {
@@ -46,8 +56,15 @@ export interface Basic {
     sitename: string,
     domain: string,
     intro: string,
-    author: string, 
+    author: string,
     ICP: string,
+}
+
+export interface User {
+    id: string,
+    name: string,
+    avatar: string,
+    profile: string,
 }
 
 export interface State {
@@ -56,5 +73,11 @@ export interface State {
     lists: List[], // 最多缓存10页
     blogs: Blog[],
     // tagsSyncAt: number,
-    loadings: string[],
+    // listLoadStack: string[],
+    // blogLoadStack: string[],
+    // commentLoadStack: string[],
+    loadStack: string[],
+    users: User[],
+    user: User,
+    comments: Map<string, Comment[]>,
 }

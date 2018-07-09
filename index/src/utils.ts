@@ -14,6 +14,11 @@ export const pad0Start = (base: string, len: number) => {
     return '0'.repeat(padLen) + base
 }
 
+/**
+ * 
+ * @param d 
+ * @param pattern some shit like yyyy年mm月dd日 hh:MM:ss
+ */
 export const timeFormat = (d: Date, pattern: string) => {
     const replacerFactory = (value: any) => (match: string) => pad0Start(value.toString(), match.length)
 

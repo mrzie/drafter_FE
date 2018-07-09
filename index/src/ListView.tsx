@@ -1,25 +1,60 @@
 import * as React from 'react'
-import { match as Match } from 'react-router'
-import { Link } from 'react-router-dom'
+import { Link, RouteComponentProps } from 'react-router-dom'
 import { History } from 'history'
 import { timeFormat } from './utils'
-import { List, Tag, Blog, Basic } from './models'
+import { Tag, Blog, Basic, State } from './models'
 import { parse as _marked } from 'marked'
+import { MapStateToProps, connect } from 'react-redux'
+import * as apis from './apis'
 
-interface ListViewProps {
-    history: History,
-    nextPage: number,
-    tag: Tag,
-    tagname: string,
-    loading: boolean,
-    blogs: Blog[],
-    fetchList: (tag: string, page: number) => Promise<any>,
-}
 declare let __basic: Basic
 
-export default class ListView extends React.Component<ListViewProps> {
+interface ListViewProps {
+    isLoading: boolean,
+    history: History,
+    blogs: Blog[],
+    tag: Tag,
+    nextPage: number,
+    tagname: string,
+}
+
+const mapStateToProps: MapStateToProps<ListViewProps, RouteComponentProps<{ tag?: string }>, State> = (state, ownProps) => {
+    const tagname = ownProps.match.params.tag || ''
+    const listMatched = state.lists.find(l => l.query === tagname)
+    // const nextPage = listMatched ? 
+    if (listMatched) {
+        const
+            ids = [].concat(...listMatched.blogs),
+            blogs = state.blogs.filter(b => ids.indexOf(b.id) != -1),
+            nextPage = ids.length >= listMatched.count ? null : (listMatched.blogs.length + 1)
+
+        return {
+            isLoading: state.loadStack.indexOf(`list.${tagname}.${nextPage}`) > -1,
+            history: ownProps.history,
+            blogs,
+            tag: state.tags.find(t => t.name === tagname),
+            nextPage,
+            tagname,
+        }
+    } else {
+        const
+            nextPage: number = null,
+            blogs: Blog[] = null
+
+        return {
+            isLoading: state.loadStack.indexOf(`list.${tagname}.${nextPage}`) > -1,
+            history: ownProps.history,
+            blogs,
+            tag: state.tags.find(t => t.name === tagname),
+            nextPage,
+            tagname,
+        }
+    }
+}
+
+class ListView extends React.Component<ListViewProps> {
     componentWillMount() {
-        this.compute(this.props)
+        this.fetchListIfNeed(this.props)
         document.addEventListener('scroll', this.handleScroll)
         window.scrollTo(0, 0)
     }
@@ -29,34 +64,11 @@ export default class ListView extends React.Component<ListViewProps> {
     }
 
     componentWillReceiveProps(next: ListViewProps) {
-        this.compute(next)
+        this.fetchListIfNeed(next)
     }
 
-    handleScroll = () => {
-        if (this.props.loading) {
-            return
-        }
-
-        if (!this.props.nextPage) {
-            // 已经抵达最后一页
-            return
-        }
-
-        const anchor = this.refs.more as HTMLElement
-        if (anchor) {
-            if (anchor.offsetTop + anchor.clientHeight <= window.scrollY + window.innerHeight) {
-                this.props.fetchList(this.props.tagname, this.props.nextPage)
-                console.log('should fetch') // for safe
-            }
-        } else {
-            // never
-            // 理论上不会出现这种情况
-            console.warn('出错了')
-        }
-    }
-
-    compute(props: ListViewProps) {
-        if (props.loading) {
+    fetchListIfNeed(props: ListViewProps) {
+        if (props.isLoading) {
             return
         }
 
@@ -79,12 +91,35 @@ export default class ListView extends React.Component<ListViewProps> {
             //     // 那你的意思是我的代码写得有问题咯？
             // }
             // 冷静一点，只是还没请求
-            return this.props.fetchList(props.tagname, 1)
+            return apis.fetchList(props.tagname, 1)
         }
 
         // 好，这里拿到文章了
         if (this.props.tagname != props.tagname) {
             window.scrollTo(0, 0)
+        }
+    }
+
+    handleScroll = () => {
+        if (this.props.isLoading) {
+            return
+        }
+
+        if (!this.props.nextPage) {
+            // 已经抵达最后一页
+            return
+        }
+
+        const anchor = this.refs.more as HTMLElement
+        if (anchor) {
+            if (anchor.offsetTop + anchor.clientHeight <= window.scrollY + window.innerHeight) {
+                apis.fetchList(this.props.tagname, this.props.nextPage)
+                console.log('should fetch') // for safe
+            }
+        } else {
+            // never
+            // 理论上不会出现这种情况
+            console.warn('出错了')
         }
     }
 
@@ -124,7 +159,7 @@ export default class ListView extends React.Component<ListViewProps> {
                 }
             </div>
             {
-                this.props.loading
+                this.props.isLoading
                     ? <div className="load-more">loading...</div>
                     : this.props.nextPage
                         ? <div ref="more" className="load-more">查看更多</div>
@@ -137,3 +172,5 @@ export default class ListView extends React.Component<ListViewProps> {
         this.handleScroll()
     }
 }
+
+export default connect(mapStateToProps, null)(ListView)
