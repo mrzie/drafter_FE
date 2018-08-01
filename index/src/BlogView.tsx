@@ -39,7 +39,6 @@ class BlogView extends React.Component<BlogViewProps> {
 
         if (!blog) {
             document.title = 'Loading...'
-            console.log(this.props)
             return apis.fetchBlog(id)
         }
         // 好，这里拿到文章了

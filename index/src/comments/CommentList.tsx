@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { timeFormat } from '../utils';
 import { Reply } from '../svgSymbols';
-
+import { QuoteContent } from './TextArea'
 import { User, Comment } from '../models'
 
 interface CommentListProps {
@@ -15,7 +15,7 @@ interface CommentListProps {
 const CommentList = ({ isLoading, comments, users, user, onQuoteComment }: CommentListProps) => <div>
     {isLoading && <div>加载中</div>}
     {!isLoading && comments === undefined && <div>加载失败</div>}
-    {comments && comments.map((comment, key, comments) => {
+    {comments && comments.sort((a, b) => a.time > b.time ? 1 : -1).map((comment, key, comments) => {
         const
             author = users.find(u => u.id === comment.user),
             quote = comment.ref ? comments.find(c => c.id === comment.ref) : null,
@@ -40,7 +40,8 @@ const CommentList = ({ isLoading, comments, users, user, onQuoteComment }: Comme
                                 <div className="comment-author">{quoteUser && quoteUser.name}</div>
                                 <div className="comment-time">{timeFormat(new Date(quote.time * 1000), 'y年m月d日')}</div>
                             </div>
-                            <div className="comment-ref-body">{quote.content}</div>
+                            {/* <div className="comment-ref-body">{quote.content}</div> */}
+                            <QuoteContent content={quote.content} />
                         </div>
                         : null
                 }

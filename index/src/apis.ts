@@ -1,8 +1,10 @@
 import store, { Action } from './store'
 import axios, { AxiosPromise } from 'axios'
 import { Dispatch } from 'redux';
-import { Tag, Blog, User, Comment } from './models'
+import { Tag, Blog, User, Comment, Basic } from './models'
 import { EventEmitter } from 'events'
+
+declare let __basic: Basic
 const { getState } = store
 const dispatch: Dispatch<Action> = store.dispatch
 
@@ -23,6 +25,11 @@ interface CommentsResponse {
     ok: boolean,
     comments: Comment[],
     users: User[],
+}
+
+interface SimpleMessage {
+    code: number,
+    msg: string,
 }
 
 export const fetchList = async (tagname: string, pagenum: number) => {
@@ -178,7 +185,27 @@ emitter.on('OAuthLogin', user => {
 })
 
 export const OAuthLogin = () => {
-    window.open(`https://api.weibo.com/oauth2/authorize?client_id=113188835&response_type=code&redirect_uri=${encodeURIComponent('http://www.mrzie.com:3723/v1/OAuthLogin')}`)
+    const redirect_uri = encodeURIComponent(`${location.origin}/v1/OAuthLogin`)
+    window.open(`https://api.weibo.com/oauth2/authorize?client_id=${__basic.sinaClientId}&response_type=code&redirect_uri=${redirect_uri}`)
+}
+
+export const OAuthExclusiveLogin = () => {
+    const redirect_uri = encodeURIComponent(`${location.origin}/v1/OAuthExclusiveLogin`)
+    window.open(`https://api.weibo.com/oauth2/authorize?client_id=${__basic.sinaClientId}&response_type=code&redirect_uri=${redirect_uri}`)
+}
+
+export const Logout = async () => {
+    const { loadStack } = getState()
+    if (loadStack.indexOf('logout') > -1) {
+        return
+    }
+    dispatch({ type: 'LOGOUT_START' })
+    const [result, err] = await handle<SimpleMessage>(axios.get('/logout'))
+    if (!err) {
+        dispatch({ type: 'LOGOUT_SUCCESS' })
+    } else {
+        dispatch({ type: 'LOGOUT_FAIL' })
+    }
 }
 
 
@@ -203,7 +230,7 @@ export const postComment = async (blogid: string, content: string, quote: string
         return
     } else {
         dispatch({
-            type: 'POST_COMMENT_FAIL', 
+            type: 'POST_COMMENT_FAIL',
             blogid,
             uid: user.id,
         })

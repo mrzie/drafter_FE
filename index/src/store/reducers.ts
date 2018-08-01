@@ -40,6 +40,7 @@ if (!__basic) {
         intro: 'welcome to my website',
         author: '',
         ICP: '',
+        sinaClientId: '',
     }
 }
 
@@ -97,6 +98,12 @@ export type Action =
     } | {
         type: "OAUTH_LOGIN",
         user: User,
+    } | {
+        type: "LOGOUT_START",
+    } | {
+        type: "LOGOUT_SUCCESS",
+    } | {
+        type: "LOGOUT_FAIL",
     }
 
 const upsertItem: <T>(arr: T[], matcher: (item: T) => boolean, replace: (old?: T) => T) => T[] = (arr, matcher, replace) => {
@@ -220,15 +227,22 @@ const loadStack: Reducer<string[]> = (state = [], actions: Action) => {
         case 'POST_COMMENT_FAIL':
         case 'POST_COMMENT_SUCCESS':
             return excludeFunc(state, i => i == `postComment.${actions.blogid}`)
+        case 'LOGOUT_START':
+            return [...state, 'logout']
+        case 'LOGOUT_SUCCESS':
+        case 'LOGOUT_FAIL':
+            return excludeFunc(state, i => i === 'logout')
         default:
             return state
     }
 }
 
-const users: Reducer<User[]> = (state = [], actions: Action) => {
+const users: Reducer<User[]> = (state = __conf.user ? [__conf.user] : [], actions: Action) => {
     switch (actions.type) {
         case 'FETCH_COMMENTS_SUCCESS':
             return [...state.filter(i => actions.users.indexOf(i) == -1), ...actions.users]
+        case 'OAUTH_LOGIN':
+            return [...state.filter(i => i.id != actions.user.id), actions.user]
         default:
             return state
     }
@@ -238,6 +252,8 @@ const user: Reducer<User> = (state = __conf.user, actions: Action) => {
     switch (actions.type) {
         case 'OAUTH_LOGIN':
             return actions.user
+        case 'LOGOUT_SUCCESS':
+            return null
         default:
             return state
     }
@@ -248,7 +264,7 @@ const comments: Reducer<Map<string, Comment[]>> = (state = new Map<string, Comme
         case 'FETCH_COMMENTS_SUCCESS':
             return new Map(state).set(actions.blogid, actions.comments)
         case 'POST_COMMENT_SUCCESS':
-            return new Map(state).set(actions.blogid, [...state.get(actions.blogid), { ...actions.comment}]) // todo 
+            return new Map(state).set(actions.blogid, [...state.get(actions.blogid), { ...actions.comment }]) // todo 
         default:
             return state
     }

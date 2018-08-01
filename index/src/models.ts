@@ -58,6 +58,7 @@ export interface Basic {
     intro: string,
     author: string,
     ICP: string,
+    sinaClientId: string,
 }
 
 export interface User {

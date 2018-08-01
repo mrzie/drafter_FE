@@ -189,7 +189,7 @@ h6 {
     text-align: center;
     font-size: .9em;
     color: #666;
-    padding: 40px 0;
+    padding: 120px 0 40px;
     text-shadow: 1px 1px 0px #fff;
 }
 
@@ -311,6 +311,13 @@ h6 {
     margin-right: 10px;
 }
 
+.comment-ref-collapse {
+    color: #0aa69e;
+    padding: 0 5px;
+    display: inline-block;
+    cursor: pointer;
+}
+
 .comment-time,
 .comment-ref-this {
     font-size: .85em;
@@ -329,6 +336,20 @@ h6 {
 
 .comment-content {
     padding: 10px 0;
+}
+
+.comment-item-pending .comment-content {
+    color: #999;
+}
+
+.comment-item-pending .comment-content:before {
+    content: '内容将在审核后显示';
+    display: block;
+    color: #0aa69e;
+    background-color: #e4ebeb;
+    border-radius: 3px;
+    font-size: .85em;
+    padding: 10px;
 }
 
 .comment-avatar {
@@ -390,11 +411,46 @@ h6 {
     cursor: pointer;
     /* font-size: .8em; */
     transition: background-color .2s ease-out;
+    margin: 5px;
 }
 
 .login-button:hover {
     /* background: rgba(10, 166, 158, .57); */
     background-color: rgba(10, 166, 158, .5);
+}
+
+.exclusive-login-button {
+    padding: 10px 15px;
+    border-radius: 3px;
+    background-color: #ccc;
+    color: #fff;
+    cursor: pointer;
+    transition: all .2s ease-out;
+    opacity: .3;
+    margin: 5px;
+    position: relative;
+}
+
+.exclusive-login-button:hover {
+    opacity: 1;
+}
+
+.exclusive-login-button:hover:after {
+    word-break: keep-all;
+    content: '并在其他设备下线';
+    position: absolute;
+    display: block;
+    top: 110%;
+    left: 0;
+    background: rgba(0, 0, 0, .5);
+    color: #fff;
+    padding: 3px 6px;
+    font-size: .7em;
+    width: auto;
+}
+
+.logout-button {
+    cursor: pointer;
 }
 
 .comment-editor {
@@ -457,6 +513,7 @@ h6 {
     overflow: hidden;
     width: 100%;
 } */
+
 .comment-editor-content-wrapper {
     padding: 15px;
     width: 100%;
@@ -537,5 +594,43 @@ h6 {
     .comment-editor-avatar {
         width: 30px;
         height: 30px;
+    }
+}
+
+.toast-view-container {
+    position: fixed;
+    transform: translateX(-50%);
+    left: 50%;
+    bottom: 30px;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    overflow: visible;
+    width: max-content;
+    width: -webkit-max-content;
+    width: -moz-max-content;
+}
+
+.toast-box {
+    padding: 10px 15px;
+    font-size: 14px;
+    color: #fff;
+    background-color: rgba(0, 0, 0, .5);
+    border-radius: 3px;
+    margin-top: 15px;
+    opacity: 0;
+    flex: none;
+    animation: toast-disappear 3s;
+}
+
+@keyframes toast-disappear {
+    0% {
+        opacity: 1;
+    }
+    70% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
     }
 }

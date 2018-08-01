@@ -36,6 +36,7 @@ export class CommentTextArea extends React.Component<CommentTextAreaProps, Comme
     toastView: ToastView
     referBox: HTMLDivElement
     referContent: HTMLDivElement
+    textarea: HTMLTextAreaElement
     referBoxFunc: (ref: HTMLDivElement) => void = ref => this.referBox = ref
     referContentFunc: (ref: HTMLDivElement) => void = ref => this.referContent = ref
     onFocus = () => this.setState({ isFocus: true })
@@ -43,7 +44,7 @@ export class CommentTextArea extends React.Component<CommentTextAreaProps, Comme
     componentDidUpdate() {
         if (this.referBox) {
             if (this.referContent) {
-                this.referBox.style.height = `${this.referContent.clientHeight}px`
+                this.referBox.style.height = `${this.referContent.clientHeight + 10}px`
                 this.referBox.style.opacity = '1'
             } else {
                 this.referBox.style.height = '0'
@@ -83,11 +84,12 @@ export class CommentTextArea extends React.Component<CommentTextAreaProps, Comme
         } else {
             this.props.onQuoteCancel()
             this.setState({ text: '' })
+            this.textarea.style.height = 'auto'
+            this.textarea.style.height = `${this.textarea.scrollHeight}px`
         }
     }
     render() {
         const { quote, quoteUser, user, onQuoteCancel } = this.props
-
         return (
             <div
                 className={this.state.isFocus ? "comment-editor comment-editor-focus" : "comment-editor"}
@@ -112,6 +114,7 @@ export class CommentTextArea extends React.Component<CommentTextAreaProps, Comme
                                                 <div className="comment-ref-cancle" onClick={onQuoteCancel}><Cross /></div>
                                             </div>
                                         </div>
+                                        {/* <QuoteContent content={quote.content} /> */}
                                         <div className="comment-ref-body">
                                             {quote.content}
                                         </div>
@@ -127,6 +130,7 @@ export class CommentTextArea extends React.Component<CommentTextAreaProps, Comme
                                 e.target.style.height = 'auto'
                                 e.target.style.height = `${e.target.scrollHeight}px`
                             }}
+                            ref={r => this.textarea = r}
                             value={this.state.text}
                             onFocus={this.onFocus}
                             onBlur={this.onBlur}
@@ -141,9 +145,60 @@ export class CommentTextArea extends React.Component<CommentTextAreaProps, Comme
     }
 }
 
+interface QuoteContentProps {
+    content: string,
+}
+
+interface QuoteContentState {
+    collapsable: boolean,
+    collapsed: boolean,
+}
+
+export class QuoteContent extends React.Component<QuoteContentProps, QuoteContentState> {
+    state = {
+        collapsable: false,
+        collapsed: true,
+    }
+    static cut(content: string) {
+        // 不超过4段且不超过200字
+        return content.slice(0, 200).split('\n').slice(0, 4).join('\n')
+    }
+    short: string = ''
+    componentWillMount() {
+        this.updateCollapsable(this.props.content)
+    }
+    componentWillReceiveProps(next: QuoteContentProps) {
+        this.updateCollapsable(next.content)
+    }
+    updateCollapsable(content: string) {
+        this.short = QuoteContent.cut(content)
+        this.setState({ collapsed: true, collapsable: content !== this.short })
+    }
+    toggleCollapsed = () => {
+        this.setState({ collapsed: !this.state.collapsed })
+    }
+    render() {
+        const text = this.state.collapsed ? this.short : this.props.content
+        return <div className="comment-ref-body">
+            {text}
+            {
+                this.state.collapsable && <span
+                    className="comment-ref-collapse"
+                    onClick={this.toggleCollapsed}
+                >
+                    {this.state.collapsed ? '展开' : '收起'}
+                </span>
+            }
+        </div>
+    }
+}
+
 
 export const CommentLoginButton = () => <div className="flex-row-container">
     <div className="login-button" onClick={apis.OAuthLogin}>
         <Sina /> 登陆后发表评论
+    </div>
+    <div className="exclusive-login-button" onClick={apis.OAuthExclusiveLogin} >
+        强势登陆
     </div>
 </div>
