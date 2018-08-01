@@ -124,7 +124,7 @@ export class CommentTextArea extends React.Component<CommentTextAreaProps, Comme
                         </div>
                         <textarea
                             className="comment-editor-content"
-                            placeholder={`欲言又止 => 畅所欲言`}
+                            placeholder={`真热啊今天`}
                             onChange={e => {
                                 this.setState({ text: e.target.value })
                                 e.target.style.height = 'auto'
