@@ -9,12 +9,33 @@ import {
     Modal,
     Warning,
     Preference,
-    UploadTask
+    UploadTask,
+    Comment,
+    User,
+    UserLevel,
+    CommentState,
+    CommentLoadState,
 } from '../model'
 import { Reducer, combineReducers, AnyAction } from 'redux'
 import { tempIdPrefix } from '../utils'
 
 declare var __conf: { authenticated: boolean, preference: Preference }
+
+// const seperate = <T>(arr: T[], isRight: (t: T) => boolean) => {
+//     const
+//         left: T[] = [],
+//         right: T[] = []
+
+//     // arr.forEach(item => (isRight(item) ? right : left).push(item))
+//     arr.forEach(item => {
+//         if (isRight(item)) {
+//             right.push(item)
+//         } else {
+//             left.push(item)
+//         }
+//     })
+//     return [left, right] as [T[], T[]]
+// }
 
 // 从数组移除某项一次
 const exclude = <T>(arr: T[], item: T) => {
@@ -184,6 +205,30 @@ export enum Types {
     UPLOAD_SUCCESS,
     UPLOAD_FAIL,
     UPLOAD_CHECK, // 上传图片结束并插入文档之后，清楚对应缓存
+
+    COMMENTS_START_LOADING,
+    COMMENTS_LOADED,
+    COMMENTS_FAIL,
+
+    DELETECOMMENT_START,
+    DELETECOMMENT_FAIL,
+    DELETECOMMENT_SUCCESS, // uncertainUser: string
+
+    REVERTCOMMENT_START,
+    REVERTCOMMENT_FAIL,
+    REVERTCOMMENT_SUCCESS, //  id
+
+    PASSCOMMENT_START,
+    PASSCOMMENT_FAIL,
+    PASSCOMMENT_SUCCESS, // sensitiveComment, uid, id
+
+    CENSORUSER_START,
+    CENSORUSER_FAIL,
+    CENSORUSER_SUCCESS, // sensitiveComment, id
+
+    BLOCKCOMMENT_START,
+    BLOCKCOMMENT_FAIL,
+    BLOCKCOMMENT_SUCCESS, // uid
 }
 
 export interface Action extends AnyAction {
@@ -537,6 +582,130 @@ const authenticate: Reducer<boolean> = (state = __conf.authenticated || false, a
     }
 }
 
+const getCensorCommentsMapper = (sensitiveOne: Comment, uid = sensitiveOne == null ? '' : sensitiveOne.user) => {
+    if (uid == '') {
+        return (t: Comment) => t
+    }
+
+    if (sensitiveOne == null) {
+        return (t: Comment) => {
+            if (t.user != uid) {
+                return t
+            } else {
+                return { ...t, state: CommentState.PASS }
+            }
+        }
+    } else {
+        return (t: Comment) => {
+            if (t.id == sensitiveOne.id) {
+                return { ...t, state: CommentState.REVIEWING }
+            } else if (t.user != uid || t.time > sensitiveOne.time) {
+                return t
+            } else {
+                return { ...t, state: CommentState.PASS }
+            }
+        }
+    }
+}
+
+
+const comments: Reducer<Comment[]> = (state = [], actions: Action) => {
+    switch (actions.type) {
+        case Types.COMMENTS_LOADED:
+            const comments: Comment[] = actions.comments
+            return [
+                ...state.filter(c => comments.find(item => item.id === c.id) === undefined),
+                ...comments
+            ].sort((a, b) => a.time < b.time ? 1 : -1)
+        case Types.DELETECOMMENT_SUCCESS:
+            return replaceItem(
+                state,
+                item => item.id == actions.id,
+                comment => ({ ...comment, alive: false })
+            )
+        case Types.REVERTCOMMENT_SUCCESS:
+            return replaceItem(
+                state,
+                item => item.id == actions.id,
+                comment => ({ ...comment, alive: true, state: CommentState.PASS })
+            )
+        case Types.PASSCOMMENT_SUCCESS:
+            // 这里注意一下，内容没那么简单了            
+            {
+                const sensitiveComment: Comment = actions.sensitiveComment,
+                    match = state.find(item => item.id == actions.id)
+
+                if (!match) {
+                    return state
+                }
+                return state.map(getCensorCommentsMapper(sensitiveComment, match.user))
+            }
+
+        case Types.CENSORUSER_SUCCESS:
+            {
+                const { sensitiveComment, id: uid } = actions as { sensitiveComment: Comment, id: string } & Action
+
+                return state.map(getCensorCommentsMapper(sensitiveComment, uid))
+            }
+        case Types.BLOCKCOMMENT_SUCCESS:
+            return replaceItem(
+                state,
+                item => item.id == actions.id,
+                comment => ({ ...comment, state: CommentState.BLOCK })
+            )
+        default:
+            return state
+    }
+}
+
+const users: Reducer<User[]> = (state = [], actions: Action) => {
+    switch (actions.type) {
+        case Types.COMMENTS_LOADED:
+            const users: User[] = actions.users
+            return [
+                ...state.filter(u => users.find(item => item.id === u.id) === undefined),
+                ...users,
+            ]
+        case Types.DELETECOMMENT_SUCCESS:
+            {
+                const { uncertainUser = '' } = actions as { uncertainUser: string } & Action
+                if (uncertainUser) {
+                    return replaceItem(
+                        state,
+                        item => item.id == uncertainUser,
+                        user => ({ ...user, level: UserLevel.DOUBTED })
+                    )
+                }
+            }
+        case Types.PASSCOMMENT_SUCCESS:
+            {
+                const { sensitiveComment, uid } = actions as { sensitiveComment: Comment, uid: string } & Action
+                return replaceItem(
+                    state,
+                    item => item.id == uid,
+                    user => ({ ...user, level: sensitiveComment ? UserLevel.REVIEWING : UserLevel.TRUSTED })
+                )
+            }
+        case Types.CENSORUSER_SUCCESS:
+            {
+                const { sensitiveComment, id } = actions as { sensitiveComment: Comment, id: string } & Action
+                return replaceItem(
+                    state,
+                    item => item.id == id,
+                    user => ({ ...user, level: sensitiveComment ? UserLevel.REVIEWING : UserLevel.TRUSTED })
+                )
+            }
+        case Types.BLOCKCOMMENT_SUCCESS:
+            return replaceItem(
+                state,
+                item => item.id == actions.uid,
+                user => ({ ...user, level: UserLevel.BLOCKED })
+            )
+        default:
+            return state
+    }
+}
+
 
 const interactions: Reducer<Interactions> = (() => {
     const loadings: Reducer<string[]> = (state = [], actions: Action) => {
@@ -662,6 +831,33 @@ const interactions: Reducer<Interactions> = (() => {
             case Types.EDITPASSWORD_SUCCESS:
             case Types.EDITPASSWORD_FAIL:
                 return exclude(state, 'EDITPASSWORD')
+
+            case Types.DELETECOMMENT_START:
+                return [...state, 'DELETECOMMENT.' + actions.id]
+            case Types.DELETECOMMENT_FAIL:
+            case Types.DELETECOMMENT_SUCCESS:
+                return exclude(state, 'DELETECOMMENT.' + actions.id)
+            case Types.REVERTCOMMENT_START:
+                return [...state, 'REVERTCOMMENT.' + actions.id]
+            case Types.REVERTCOMMENT_FAIL:
+            case Types.REVERTCOMMENT_SUCCESS:
+                return exclude(state, 'REVERTCOMMENT.' + actions.id)
+            case Types.PASSCOMMENT_START:
+                return [...state, 'PASSCOMMENT.' + actions.id]
+            case Types.PASSCOMMENT_FAIL:
+            case Types.PASSCOMMENT_SUCCESS:
+                return exclude(state, 'PASSCOMMENT.' + actions.id)
+            case Types.BLOCKCOMMENT_START:
+                return [...state, 'BLOCKCOMMENT.' + actions.id]
+            case Types.BLOCKCOMMENT_FAIL:
+            case Types.BLOCKCOMMENT_SUCCESS:
+                return exclude(state, 'BLOCKCOMMENT.' + actions.id)
+            case Types.CENSORUSER_START:
+                return [...state, 'CENSORUSER.' + actions.id]
+            case Types.CENSORUSER_FAIL:
+            case Types.CENSORUSER_SUCCESS:
+                return exclude(state, 'CENSORUSER.' + actions.id)
+
             default:
                 return state
         }
@@ -760,6 +956,20 @@ const interactions: Reducer<Interactions> = (() => {
                 return state
         }
     }
+
+    const commentLoadMarks: Reducer<{ [name: string]: CommentLoadState }> = (state = {}, actions: Action) => {
+        switch (actions.type) {
+            case Types.COMMENTS_START_LOADING:
+                return { ...state, [actions.key]: CommentLoadState.LOADING }
+            case Types.COMMENTS_LOADED:
+                return { ...state, [actions.key]: CommentLoadState.LOADED }
+            case Types.COMMENTS_FAIL:
+                return { ...state, [actions.key]: CommentLoadState.LOADFAIL }
+            default:
+                return state
+        }
+    }
+
     return <Reducer<Interactions>>combineReducers({
         loadings,
         currentNotebook,
@@ -769,6 +979,7 @@ const interactions: Reducer<Interactions> = (() => {
         modals,
         warnings,
         tagsSyncAt,
+        commentLoadMarks,
     })
 })()
 
@@ -781,4 +992,6 @@ export const reducer: Reducer<State> = combineReducers({
     interactions,
     preference,
     uploadQueue,
+    comments,
+    users,
 })

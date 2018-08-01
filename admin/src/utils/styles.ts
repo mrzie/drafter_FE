@@ -40,7 +40,7 @@ export const notelistStyles: StyleRules = {
         display: 'inline-block',
     },
     itemAbstract: {
-        lineHeight: '18px',
+        // lineHeight: '18px',
         height: '54px',
         overflow: 'hidden',
     },

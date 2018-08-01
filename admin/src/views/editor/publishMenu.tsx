@@ -38,10 +38,7 @@ class PublishMenu extends React.Component<PublishMenuProps, null>{
         if (next.open) {
             if (!this.props.open) {
                 // 刚刚打开的兄弟，要不要判断一下有没有新博客啊
-                const { blogsSyncAt, isLoadingBlogs } = next
-                if (!isLoadingBlogs && (!blogsSyncAt || blogsSyncAt + 1000 * 60 * 15 <= +new Date())) {
-                    api.getBlogs()
-                }
+                api.getBlogsIfNeed()
             }
             this.relativeBlogs = next.blogs.filter(b => b.noteid === next.noteid)
         }

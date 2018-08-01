@@ -1,8 +1,7 @@
 import * as React from 'react'
-import { Grid, Card, Chip, CircularProgress, MenuItem, LinearProgress } from 'material-ui'
+import { Card, Chip, CircularProgress, MenuItem, LinearProgress } from 'material-ui'
 import { withStyles, StyleRulesCallback } from 'material-ui/styles'
-import { connect } from 'react-redux'
-import { State, Blog } from '../../model'
+import { Blog } from '../../model'
 import * as api from '../../api'
 import { timeFormat } from '../../utils'
 import Stepper from './listStepper'
@@ -13,18 +12,7 @@ import { isBlogBusy } from '../../utils'
 import { Link } from 'react-router-dom'
 import { Description } from 'material-ui-icons'
 
-// const mapStateToProps = (state: State) => ({
-//     blogs: state.blogs
-// })
-
 const styles: StyleRulesCallback = theme => ({
-    // container: {
-    //     width: '100%',
-    //     maxHeight: '100vh',
-    // },
-    // header: {
-    //     height: '50px',
-    // },
     blogItem: {
         margin: '10px',
         padding: '16px 16px 24px',
@@ -35,7 +23,6 @@ const styles: StyleRulesCallback = theme => ({
         opacity: .6,
     },
     blogTitle: {
-
         fontSize: '1.5em',
         overflow: 'hidden',
         whiteSpace: 'nowrap',
@@ -52,7 +39,6 @@ const styles: StyleRulesCallback = theme => ({
         color: '#3b8adb',
     },
     blogAbstract: {
-        lineHeight: '18px',
         margin: '15px 0',
         overflow: 'hidden',
     },
@@ -83,7 +69,6 @@ const styles: StyleRulesCallback = theme => ({
             outline: 'none',
         },
     },
-
     itemProgress: {
         position: 'absolute',
         bottom: '0',
@@ -138,10 +123,7 @@ interface BlogsListState {
 }
 
 const
-    cap = 12,
-    menuNOOP = (e: React.MouseEvent<any>) => e.preventDefault(),
-    $blog = api.$blog
-
+    cap = 12
 class BlogsList extends React.Component<BlogsListProps, BlogsListState> {
     state: BlogsListState = {
         page: 1,
@@ -183,22 +165,22 @@ class BlogsList extends React.Component<BlogsListProps, BlogsListState> {
     }
 
     onBlogEditRequest = () => {
-        $blog.handleEditBlog(this.state.contextMenuTarget, this.props.history, this.modalRangeId)
+        api.handleEditBlog(this.state.contextMenuTarget, this.props.history, this.modalRangeId)
         this.setState({ contextMenuTarget: null })
     }
 
     onBlogHideRequest = () => {
-        $blog.handleHideBlog(this.state.contextMenuTarget)
+        api.handleHideBlog(this.state.contextMenuTarget)
         this.setState({ contextMenuTarget: null })
     }
 
     onBlogRestoreRequest = () => {
-        $blog.handleRestoreBlog(this.state.contextMenuTarget)
+        api.handleRestoreBlog(this.state.contextMenuTarget)
         this.setState({ contextMenuTarget: null })
     }
 
     onBlogRemoveRequest = () => {
-        $blog.handleDeleteBlog(this.state.contextMenuTarget)
+        api.handleDeleteBlog(this.state.contextMenuTarget)
         this.setState({ contextMenuTarget: null })
     }
 
@@ -218,16 +200,6 @@ class BlogsList extends React.Component<BlogsListProps, BlogsListState> {
         this.props.history.push(`/admin/blog/${this.state.contextMenuTarget.id}`)
     }
 
-    // isBlogBusy(id: string) {
-    //     // let prefix
-    //     // const loadings = this.props.loadings
-    //     // for (prefix of ['ACTIVATEBLOG.', 'EDITBLOG.', 'DELETEBLOG.']) {
-    //     //     if (loadings.indexOf(prefix + id) > -1) {
-    //     //         return true
-    //     //     }
-    //     // }
-    //     // return false
-    // }
 
     renderMenuItem(target: Blog) {
         if (!target) {

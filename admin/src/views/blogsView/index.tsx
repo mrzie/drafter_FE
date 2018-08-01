@@ -1,8 +1,8 @@
 import * as React from 'react'
-import { Grid, Card, CardContent, Button } from 'material-ui'
+import { Grid } from 'material-ui'
 import { withStyles, StyleRulesCallback } from 'material-ui/styles'
 import { connect } from 'react-redux'
-import { State, Blog, Note, Choice } from '../../model'
+import { State, Blog, Note } from '../../model'
 import * as api from '../../api'
 import { match as Match } from 'react-router-dom'
 import BlogsList from './blogsList'
@@ -13,9 +13,6 @@ import Dialog, {
     DialogContentText,
     DialogTitle,
 } from 'material-ui/Dialog'
-import Slide from 'material-ui/transitions/Slide'
-import * as interactions from '../../interactions'
-import { handle } from '../../utils'
 
 const mapStateToProps = (state: State) => {
     const currentNoteId = state.interactions.currentNote,
@@ -58,20 +55,10 @@ interface BlogsViewProps {
     notebookSuggessed: string,
 }
 
-interface BlogViewState {
-    // editBlogDialogOpen: boolean,
-    // editBlogDialogContent: string,
-    // editBlogTarget: string,
-}
-
-// const cap = 30
-
-class BlogsView extends React.Component<BlogsViewProps, BlogViewState> {
+class BlogsView extends React.Component<BlogsViewProps, null> {
 
     componentWillMount() {
-        if (!this.props.syncAt || this.props.syncAt + 1000 * 60 * 15 <= +new Date() && this.props.loadings.indexOf('GETBLOGS') === -1) {
-            api.getBlogs()
-        }
+        api.getBlogsIfNeed()
 
     }
 

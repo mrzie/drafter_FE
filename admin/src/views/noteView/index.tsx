@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { Drawer, IconButton } from 'material-ui'
 import { withStyles, StyleRulesCallback } from 'material-ui/styles'
-import { connect, Dispatch } from 'react-redux'
+import { connect } from 'react-redux'
 import { State, Notebook } from '../../model'
 import NoteList from './noteList'
 import Editor from '../editor'
@@ -21,15 +21,12 @@ const viewStyles: StyleRulesCallback = theme => ({
         width: '20%',
     },
     noteListPaper: {
-        // width: '18%',
         width: '100%',
         position: 'relative',
-        // left: '10%',
         background: '#f8f8f8',
 
         zIndex: 'auto',
         willChange: 'auto',
-        // padding: '5px',
     },
     notelistHolder: {
         width: '18%',
@@ -51,7 +48,6 @@ const viewStyles: StyleRulesCallback = theme => ({
         height: 'calc(100% - 50px)',
         position: 'relative',
         overflowY: 'auto',
-        // willChange: 'auto',
     }
 })
 

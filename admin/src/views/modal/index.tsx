@@ -179,7 +179,7 @@ export class ModalRange extends React.Component<ModalRangeProps> {
     }
 
     render() {
-        return <em/>
+        return <em />
     }
 }
 

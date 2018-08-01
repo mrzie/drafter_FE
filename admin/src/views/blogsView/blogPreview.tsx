@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { State, Blog } from '../../model'
+import { State, Blog, CommentLoadState, Comment } from '../../model'
 import { withStyles, StyleRulesCallback } from 'material-ui/styles'
 import {
     Paper,
@@ -11,7 +11,6 @@ import {
     Button,
     MenuItem,
 } from 'material-ui'
-import Slide from 'material-ui/transitions/Slide'
 import { parse as marked } from 'marked'
 import { Visibility, VisibilityOff, Delete, Edit } from 'material-ui-icons'
 import * as api from '../../api'
@@ -20,6 +19,7 @@ import { match as Match } from 'react-router-dom'
 import { ModalRange, getModalRangeId } from '../modal'
 import { isBlogBusy } from '../../utils'
 import { connect } from 'react-redux'
+import BlogComments from '../commentView/blogCommentsView'
 
 const styles: StyleRulesCallback = theme => ({
     container: {
@@ -43,12 +43,10 @@ const styles: StyleRulesCallback = theme => ({
         height: 'calc(100vh - 106px)',
         overflow: 'auto',
     },
-    // tip: {
-
-    // },
-    // buttons: {
-
-    // }
+    blogComments: {
+        height: 'calc(100vh - 42px)',
+        overflowY: 'auto',
+    },
 })
 
 const mapStateToProps = (state: State, ownProps: BlogPreviewOuterProps) => {
@@ -62,6 +60,8 @@ const mapStateToProps = (state: State, ownProps: BlogPreviewOuterProps) => {
         blog: state.blogs.find(b => b.id === id),
         isLoading,
         isBusy,
+        commentsLoading: state.interactions.commentLoadMarks[`blog=${id}`] === CommentLoadState.LOADING,
+        comments: state.comments.filter(c => c.blog === id),
     }
 }
 
@@ -73,6 +73,8 @@ interface BlogPreviewProps {
     match: Match<{ id: string }>,
     history: History,
     classes: any,
+    commentsLoading: boolean,
+    comments: Comment[],
 }
 
 interface BlogPreviewOuterProps {
@@ -84,15 +86,8 @@ interface BlogPreviewState {
 
 }
 
-const { $blog } = api
 
 class BlogPreview extends React.Component<BlogPreviewProps, BlogPreviewState> {
-    // state = {
-    //     isViewSource: false,
-    //     restoreDialogOpen: false,
-    //     restoreDialogText: '',
-    //     restoreTargetNotebook: '',
-    // }
     modalRangeId: number = getModalRangeId()
 
     componentWillMount() {
@@ -115,23 +110,30 @@ class BlogPreview extends React.Component<BlogPreviewProps, BlogPreviewState> {
     }
 
     onRequestHidden = () => {
-        $blog.handleHideBlog(this.props.blog)
+        api.handleHideBlog(this.props.blog)
     }
 
     onRequestRestore = () => {
-        $blog.handleRestoreBlog(this.props.blog)
+        api.handleRestoreBlog(this.props.blog)
     }
 
     onRequestDelete = () => {
-        $blog.handleDeleteBlog(this.props.blog)
+        api.handleDeleteBlog(this.props.blog)
     }
 
     onRequestEdit = () => {
-        $blog.handleEditBlog(this.props.blog, this.props.history, this.modalRangeId)
+        api.handleEditBlog(this.props.blog, this.props.history, this.modalRangeId)
+    }
+
+    onRequestGetComments = () => {
+        if (this.props.commentsLoading || !this.props.blog) {
+            return
+        }
+        return api.fetchCommentsByBlog(this.props.match.params.id)
     }
 
     render() {
-        const { blog, isLoading, isBusy } = this.props
+        const { blog, isLoading, isBusy, commentsLoading, comments } = this.props
 
         if (!blog) {
             return <div>
@@ -171,7 +173,7 @@ class BlogPreview extends React.Component<BlogPreviewProps, BlogPreviewState> {
                 </div>
             </div>
             <Grid container justify="center">
-                <Grid item xs={10} sm={10} md={9} lg={9}>
+                <Grid item xs={6} sm={6} md={6} lg={6}>
                     {blog
                         ? <Paper className={this.props.classes.blog} >
                             <h1>{blog.title}</h1>
@@ -188,6 +190,9 @@ class BlogPreview extends React.Component<BlogPreviewProps, BlogPreviewState> {
                             <CircularProgress />
                         </Paper>
                     }
+                </Grid>
+                <Grid item xs={5} sm={5} md={5} lg={5} classes={{ typeItem: this.props.classes.blogComments }}>
+                    <BlogComments id={this.props.blog.id} />
                 </Grid>
             </Grid>
             <ModalRange id={this.modalRangeId} />

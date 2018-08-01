@@ -1,6 +1,6 @@
 import axios, { AxiosPromise } from 'axios'
 import { store, Types } from '../store'
-import { Notebook, Note, Blog, Choice, Tag, Preference } from '../model'
+import { Notebook, Note, Blog, Choice, Tag, Preference, Comment, User } from '../model'
 import { marked } from '../utils'
 import { History } from 'history'
 import * as interactions from '../interactions'
@@ -293,6 +293,15 @@ export const getBlogs = async () => {
     }
 }
 
+export const getBlogsIfNeed = async () => {
+    const
+        { interactions: { loadings, blogsSyncAt }, } = store.getState(),
+        isLoading = loadings.indexOf('GETBLOGS') !== -1
+    if (!isLoading && (!blogsSyncAt || blogsSyncAt + 1000 * 60 * 15 <= +new Date())) {
+        return getBlogs()
+    }
+}
+
 export const getBlog = async (ids: string[]) => {
     const loadings = store.getState().interactions.loadings
     // 这里会筛掉正在加载中的blog
@@ -343,16 +352,6 @@ export const editBlog = async (id: string, noteid: string) => {
         dispatch({ type: Types.EDITBLOG_SUCCESS, id, noteid, edition })
     }
 }
-
-// export const inactivateBlog = async (id: string) => {
-//     dispatch({ type: Types.INACTIVATEBLOG_START, id })
-//     const [_, err]: Expect<simpleMessage> = await handle(axios.put(`/admin/blog/${id}`, { active: false }))
-//     if (err != null) {
-//         dispatch({ type: Types.INACTIVATEBLOG_FAIL, id })
-//     } else {
-//         dispatch({ type: Types.INACTIVATEBLOG_SUCCESS, id })
-//     }
-// }
 
 export const activateBlog = async (id: string, alive: boolean) => {
     dispatch({ type: Types.ACTIVATEBLOG_START, id, alive })
@@ -459,142 +458,319 @@ export const uploadImage = async (f: File, id: string) => {
     }
 }
 
-export const $blog = (() => {
-    const editInNewNote = async (blog: Blog, history: History, notebookSuggessed: string) => {
-        // 这里其实Loading会显示的，但是其实是newNote的loading并不明显
-        history.push(`/admin/notebook/${notebookSuggessed}`)
-        newNote(
-            notebookSuggessed,
-            blog.title,
-            blog.tags,
-            blog.content,
-        ).catch(err => {
-            interactions.warn('网络异常：创建新笔记失败')
-        })
-        return true
+const editInNewNote = async (blog: Blog, history: History, notebookSuggessed: string) => {
+    // 这里其实Loading会显示的，但是其实是newNote的loading并不明显
+    history.push(`/admin/notebook/${notebookSuggessed}`)
+    newNote(
+        notebookSuggessed,
+        blog.title,
+        blog.tags,
+        blog.content,
+    ).catch(err => {
+        interactions.warn('网络异常：创建新笔记失败')
+    })
+    return true
+}
+
+export const handleEditBlog = async (blog: Blog, history: History, rangeId: number) => {
+    const state = store.getState(),
+        // blog = state.blogs.find(b => b.id === id),
+        currentNoteId = state.interactions.currentNote,
+        notebooks = state.notebooks,
+        notebookSuggessed = notebooks.length
+            ? currentNoteId
+                ? (notebooks.find(n => n.id === currentNoteId) || notebooks[0]).id
+                : notebooks[0].id
+            : null
+    if (!blog) {
+        // 这里没有定位到blog，理论上不可能出现
+        return false // TODO
     }
 
-    return {
-        handleEditBlog: async (blog: Blog, history: History, rangeId: number) => {
-            const state = store.getState(),
-                // blog = state.blogs.find(b => b.id === id),
-                currentNoteId = state.interactions.currentNote,
-                notebooks = state.notebooks,
-                notebookSuggessed = notebooks.length
-                    ? currentNoteId
-                        ? (notebooks.find(n => n.id === currentNoteId) || notebooks[0]).id
-                        : notebooks[0].id
-                    : null
-            if (!blog) {
-                // 这里没有定位到blog，理论上不可能出现
-                return false // TODO
-            }
+    let note = (state.notes as Note[]).find(n => n.id === blog.noteid) || await getNote(blog.noteid)
 
-            let note = (state.notes as Note[]).find(n => n.id === blog.noteid) || await getNote(blog.noteid)
+    const cancel: Choice = {
+        text: '取消',
+        then: () => true,
+    }
 
-            const cancel: Choice = {
-                text: '取消',
-                then: () => true,
-            }
-
-            if (!note || !note.alive) {
-                // 原笔记不存在
-                if (notebookSuggessed) {
-                    const ensure: Choice = {
-                        text: '确定',
-                        then: () => editInNewNote(blog, history, notebookSuggessed)
-                    }
-                    interactions.modal(
-                        '原笔记不存在或已经被删除，即将在新建的笔记中暂存修改',
-                        [cancel, ensure],
-                        rangeId,
-                        '笔记发生了变化'
-                    )
-                } else {
-                    // 真是大条了，居然连notebook都没有
-                    const ensure: Choice = {
-                        text: '确定',
-                        then: () => {
-                            history.push('/admin/notebooks')
-                            return true
-                        }
-                    }
-                    interactions.modal(
-                        '原笔记不存在或已经被删除，你需要先创建一个笔记本',
-                        [cancel, ensure],
-                        rangeId,
-                        '笔记发生了变化'
-                    )
-                }
-
-                // editBlogDialogContent = ''
-            } else if (note.editAt > blog.editAt) {
-                // note有了新的变化
-                const choices: Choice[] = [
-                    cancel,
-                    {
-                        text: '继续修改',
-                        then: () => {
-                            interactions.setCurrentNote(note.id)
-                            history.push(`/admin/notebook/${note.notebookid}`)
-                            return true
-                        }
-                    }, {
-                        text: '创建新的笔记',
-                        then: () => this.editInNewNote(blog)
-                    }]
-
-                interactions.modal(
-                    '原笔记在发布后有了新的改动，是否从草稿开始继续修改？',
-                    choices,
-                    rangeId,
-                    '笔记发生了变化'
-                )
-            } else {
-                // 直接修改
-                interactions.setCurrentNote(note.id)
-                history.push(`/admin/notebook/${note.notebookid}`)
-            }
-        },
-
-        handleHideBlog: async (blog: Blog) => {
-            // const { blogs } = store.getState(),
-            //     blog = blogs.find(b => b.id === id)
-            if (!blog || !blog.alive) {
-                // 这里没有定位到blog，理论上不可能出现
-                return false // TODO
-            }
-            await activateBlog(blog.id, false)
-        },
-
-        handleRestoreBlog: async (blog: Blog) => {
-            if (!blog || blog.alive) {
-                // 这里没有定位到blog，理论上不可能出现
-                return false // TODO
-            }
-            await activateBlog(blog.id, true)
-        },
-
-        handleDeleteBlog: async (blog: Blog) => {
-            if (!blog || blog.alive) {
-                // 这里没有定位到blog，或blog存活，理论上不可能出现
-                return false // TODO
+    if (!note || !note.alive) {
+        // 原笔记不存在
+        if (notebookSuggessed) {
+            const ensure: Choice = {
+                text: '确定',
+                then: () => editInNewNote(blog, history, notebookSuggessed)
             }
             interactions.modal(
-                `确定要永久删除《${blog.title}》吗？（此操作无法撤销）`, [
-                    {
-                        text: '取消',
-                        then: () => true,
-                    },
-                    {
-                        text: '确认删除',
-                        then: () => {
-                            removeBlog(blog.id)
-                            return true
-                        }
-                    }
-                ]
+                '原笔记不存在或已经被删除，即将在新建的笔记中暂存修改',
+                [cancel, ensure],
+                rangeId,
+                '笔记发生了变化'
+            )
+        } else {
+            // 真是大条了，居然连notebook都没有
+            const ensure: Choice = {
+                text: '确定',
+                then: () => {
+                    history.push('/admin/notebooks')
+                    return true
+                }
+            }
+            interactions.modal(
+                '原笔记不存在或已经被删除，你需要先创建一个笔记本',
+                [cancel, ensure],
+                rangeId,
+                '笔记发生了变化'
             )
         }
+
+        // editBlogDialogContent = ''
+    } else if (note.editAt > blog.editAt) {
+        // note有了新的变化
+        const choices: Choice[] = [
+            cancel,
+            {
+                text: '继续修改',
+                then: () => {
+                    interactions.setCurrentNote(note.id)
+                    history.push(`/admin/notebook/${note.notebookid}`)
+                    return true
+                }
+            }, {
+                text: '创建新的笔记',
+                then: () => this.editInNewNote(blog)
+            }]
+
+        interactions.modal(
+            '原笔记在发布后有了新的改动，是否从草稿开始继续修改？',
+            choices,
+            rangeId,
+            '笔记发生了变化'
+        )
+    } else {
+        // 直接修改
+        interactions.setCurrentNote(note.id)
+        history.push(`/admin/notebook/${note.notebookid}`)
     }
-})()
+}
+
+export const handleHideBlog = async (blog: Blog) => {
+    // const { blogs } = store.getState(),
+    //     blog = blogs.find(b => b.id === id)
+    if (!blog || !blog.alive) {
+        // 这里没有定位到blog，理论上不可能出现
+        return false // TODO
+    }
+    await activateBlog(blog.id, false)
+}
+
+export const handleRestoreBlog = async (blog: Blog) => {
+    if (!blog || blog.alive) {
+        // 这里没有定位到blog，理论上不可能出现
+        return false // TODO
+    }
+    await activateBlog(blog.id, true)
+}
+
+export const handleDeleteBlog = async (blog: Blog) => {
+    if (!blog || blog.alive) {
+        // 这里没有定位到blog，或blog存活，理论上不可能出现
+        return false // TODO
+    }
+    interactions.modal(
+        `确定要永久删除《${blog.title}》吗？（此操作无法撤销）`, [
+            {
+                text: '取消',
+                then: () => true,
+            },
+            {
+                text: '确认删除',
+                then: () => {
+                    removeBlog(blog.id)
+                    return true
+                }
+            }
+        ]
+    )
+}
+
+interface FetchCommentsRequest {
+    comments: Comment[],
+    users: User[],
+}
+
+const fetchComments = async (key: string, params: any) => {
+    dispatch({ type: Types.COMMENTS_START_LOADING, key })
+
+    const
+        [{ comments, users }, err]
+            : Expect<FetchCommentsRequest>
+            = await handle(axios.get('/admin/comments', { params }))
+            
+    if (err != null) {
+        dispatch({ type: Types.COMMENTS_FAIL, key })
+        return Promise.reject(err)
+    } else {
+        dispatch({ type: Types.COMMENTS_LOADED, comments, users,key })
+        return true
+    }
+}
+
+export const fetchCommentsByUsers = (user: string) => fetchComments(`user=${user}`, { user })
+
+export const fetchCommentsByBlog = (blog: string) => fetchComments(`blog=${blog}`, { blog })
+
+export const fetchDoubtedComments = () => fetchComments('doubted', { type: 'doubted' })
+
+export const fetchReviewingComments = () => fetchComments('reviewing', { type: 'reviewing' })
+
+export const fetchRemovedComments = () => fetchComments('removed', { type: 'removed' })
+
+export const fetchBlockedComments = () => fetchComments('blocked', { type: 'blocked' })
+
+export const fetchRecentComments = () => fetchComments('recent', { type: 'recent' })
+
+interface DeleteCommentResponse {
+    ok: boolean,
+    isDoubted: boolean,
+}
+
+export const deleteComment = async (id: string) => {
+    const { comments, users } = store.getState(),
+        comment = comments.find(c => c.id === id)
+    if (!comment) {
+        warn('评论不存在')
+        return Promise.reject('评论不存在')
+    }
+    const user = users.find(u => u.id === comment.user)
+    if (!user) {
+        warn('评论用户不存在')
+        return Promise.reject('评论用户不存在')
+    }
+    dispatch({ type: Types.DELETECOMMENT_START, id })
+
+    const [res, err]: Expect<DeleteCommentResponse> = await handle(axios.delete('/admin/comment', { params: { id } }))
+    if (err != null) {
+        warn('删除评论失败')
+        dispatch({ type: Types.DELETECOMMENT_FAIL, id })
+        return Promise.reject(err)
+    }
+
+    dispatch({
+        type: Types.DELETECOMMENT_SUCCESS,
+        id,
+        uncertainUser: res.isDoubted ? user.id : undefined
+    })
+    return
+}
+
+export const revertComment = async (id: string) => {
+    const
+        { comments, users } = store.getState(),
+        comment = comments.find(c => c.id === id)
+
+    if (!comment) {
+        warn('评论不存在')
+        return Promise.reject('评论不存在')
+    }
+
+    dispatch({ type: Types.REVERTCOMMENT_START, id })
+    const [_, err]: Expect<simpleMessage> = await handle(axios.patch('/admin/revertComment', null, { params: { id } }))
+    if (err != null) {
+        warn('未能成功恢复评论')
+        dispatch({ type: Types.REVERTCOMMENT_FAIL, id })
+        return Promise.reject('未能成功恢复评论')
+    }
+    dispatch({ type: Types.REVERTCOMMENT_SUCCESS, id })
+    return
+}
+
+interface CensorUserResponse {
+    sensitiveComment: Comment,
+}
+export const passComment = async (id: string) => {
+    const
+        { comments, users } = store.getState(),
+        comment = comments.find(c => c.id === id)
+
+    if (!comment) {
+        warn('评论不存在')
+        return Promise.reject('评论不存在')
+    }
+    const user = users.find(u => u.id === comment.user)
+    if (!user) {
+        warn('评论用户不存在')
+        return Promise.reject('评论用户不存在')
+    }
+
+    dispatch({ type: Types.PASSCOMMENT_START, id })
+    const [res, err]: Expect<CensorUserResponse> = await handle(axios.patch('/admin/passComment', null, { params: { id } }))
+    if (err != null) {
+        warn('未能成功置信评论')
+        dispatch({ type: Types.PASSCOMMENT_FAIL, id })
+        return Promise.reject('未能成功置信评论')
+    }
+    dispatch({
+        type: Types.PASSCOMMENT_SUCCESS,
+        id,
+        uid: user.id,
+        sensitiveComment: res.sensitiveComment,
+    })
+    return
+}
+
+export const censorUser = async (id: string) => {
+    const
+        { users } = store.getState(),
+        user = users.find(u => u.id === id)
+
+    if (!user) {
+        warn('用户不存在')
+        return Promise.reject('用户不存在')
+    }
+    dispatch({ type: Types.CENSORUSER_START, id })
+
+    const [res, err]: Expect<CensorUserResponse> = await handle(axios.patch('/admin/censorUser', null, { params: { id } }))
+    if (err != null) {
+        dispatch({ type: Types.CENSORUSER_FAIL, id })
+        return Promise.reject(null)
+    }
+    dispatch({
+        type: Types.CENSORUSER_SUCCESS,
+        id,
+        sensitiveComment: res.sensitiveComment,
+    })
+    return
+}
+
+export const blockComment = async (id: string) => {
+    const
+        { comments, users } = store.getState(),
+        comment = comments.find(c => c.id === id)
+
+    if (!comment) {
+        warn('评论不存在')
+        return Promise.reject('评论不存在')
+    }
+    const user = users.find(u => u.id === comment.user)
+    if (!user) {
+        warn('评论用户不存在')
+        return Promise.reject('评论用户不存在')
+    }
+
+    dispatch({ type: Types.BLOCKCOMMENT_START, id })
+    const [_, err]: Expect<simpleMessage> = await handle(axios.patch('/admin/blockComment', null, { params: { id } }))
+    if (err != null) {
+        dispatch({
+            type: Types.BLOCKCOMMENT_FAIL,
+            id,
+        })
+        warn('屏蔽失败')
+        return Promise.reject('屏蔽失败')
+    }
+    dispatch({
+        type: Types.BLOCKCOMMENT_SUCCESS,
+        id,
+        uid: user.id,
+    })
+}

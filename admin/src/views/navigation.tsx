@@ -1,11 +1,10 @@
 import * as React from 'react'
-import List, { ListItem, ListItemIcon } from 'material-ui/List'
+import List, { ListItem } from 'material-ui/List'
 import { withStyles, StyleRulesCallback } from 'material-ui/styles'
-import Collapse from 'material-ui/transitions/Collapse'
 import { connect } from 'react-redux'
 import { State, Notebook } from '../model'
 import { Link } from 'react-router-dom'
-import { Description, LibraryBooks, Delete, Tune, LocalOffer, Web } from 'material-ui-icons'
+import { Description, LibraryBooks, Delete, Tune, LocalOffer, Web,Comment } from 'material-ui-icons'
 // import { Tooltip } from 'material-ui'
 
 const styles: StyleRulesCallback = theme => ({
@@ -68,51 +67,41 @@ class SideBar extends React.Component<{ classes: any, notebooks: Notebook[] }, {
         const { classes, notebooks } = this.props
 
         return <List className={classes.list}>
-            {/* <Tooltip classes={{ popper: classes.popper }} title="笔记" placement="bottom"  label="notes"> */}
             <Link to="/admin/notebook/" className={classes.link}>
                 <ListItem button className={classes.item} data-label="笔记">
                     <Description />
                 </ListItem>
             </Link>
-            {/* </Tooltip> */}
-            {/* <Tooltip classes={{ popper: classes.popper }} title="笔记本" placement="bottom" label="books"> */}
             <Link to="/admin/notebooks" className={classes.link}>
                 <ListItem button className={classes.item} data-label="笔记本">
                     <LibraryBooks />
                 </ListItem>
             </Link>
-            {/* </Tooltip> */}
-            {/* <Tooltip classes={{ popper: classes.popper }} title="博客" placement="bottom" label="blogs"> */}
             <Link to="/admin/blogs" className={classes.link}>
                 <ListItem button className={classes.item} data-label="博客">
                     <Web />
                 </ListItem>
-                {/* <ListItem button className={classes.item}>博客</ListItem> */}
             </Link>
-            {/* </Tooltip> */}
-            {/* <Tooltip classes={{ popper: classes.popper }} title="标签" placement="bottom" label="tags"> */}
             <Link to="/admin/tags" className={classes.link}>
                 <ListItem button className={classes.item} data-label="标签">
                     <LocalOffer />
                 </ListItem>
-                {/* <ListItem button className={classes.item}>标签</ListItem> */}
             </Link>
-            {/* </Tooltip> */}
-            {/* <Tooltip classes={{ popper: classes.popper }} title="喜好" placement="bottom" label="preference"> */}
             <Link to="/admin/preference" className={classes.link}>
                 <ListItem button className={classes.item} data-label="喜好">
                     <Tune />
                 </ListItem>
-                {/* <ListItem button className={classes.item}>喜好</ListItem> */}
             </Link>
-            {/* </Tooltip> */}
-            {/* <Tooltip classes={{ popper: classes.popper }} title="废纸篓" placement="bottom" label="waste"> */}
+            <Link to="/admin/comments/recent" className={classes.link}>
+                <ListItem button className={classes.item} data-label="最近评论">
+                    <Comment />
+                </ListItem>
+            </Link>
             <Link to="/admin/waste" className={classes.link}>
                 <ListItem button className={classes.item} data-label="废纸篓">
                     <Delete />
                 </ListItem>
             </Link>
-            {/* </Tooltip> */}
         </List>
     }
 }

@@ -60,7 +60,13 @@ export interface Interactions {
     tagsSyncAt: number,
     modals: Modal[],
     warnings: Warning[],
-    // cached: string, state is engough
+    commentLoadMarks: { [name: string]: CommentLoadState },
+}
+
+export enum CommentLoadState {
+    LOADING = 0,
+    LOADED = 1,
+    LOADFAIL = 2,
 }
 
 export interface State {
@@ -72,6 +78,8 @@ export interface State {
     preference: Preference,
     interactions: Interactions, // 作为变量记录页面上的交互数据。如呈现的notebook。我还没想好内容
     uploadQueue: UploadTask[],
+    comments: Comment[],
+    users: User[],
 }
 
 export interface Choice {
@@ -103,7 +111,40 @@ export interface Preference {
 }
 
 export interface UploadTask {
-    id:string,
+    id: string,
     state: number, // 0 - pending, 1 - success, 2 - fail
     value?: string,
+}
+
+export enum CommentState {
+    REVIEWING = 0,
+    PASS = 1,
+    IMPLICATED = 2,
+    BLOCK = 3,
+}
+
+export interface Comment {
+    id: string,
+    ref: string,
+    blog: string,
+    user: string,
+    state: CommentState,
+    alive: boolean,
+    time: number,
+    content: string,
+}
+
+export enum UserLevel {
+    DOUBTED = 0,
+    TRUSTED = 1,
+    REVIEWING = 2,
+    BLOCKED = 3,
+}
+
+export interface User {
+    id: string,
+    avatar: string,
+    name: string,
+    sina_profile: string,
+    level: UserLevel,
 }

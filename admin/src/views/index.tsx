@@ -16,6 +16,7 @@ import TagsView from './tagsView'
 import * as api from '../api'
 import { Modals, ModalRange } from './modal'
 import PreferenceView from './preferenceView'
+import CommentView, {UserCommentView} from './commentView'
 
 const mapStateToProps = (state: State) => ({
     logined: !!state.authenticate,
@@ -87,12 +88,14 @@ class layout extends React.Component<{ classes: any }>{
                     <Route path="/admin/notebook/:nbid" component={NoteView} />
                     <Route path="/admin/notebook/" exact component={NoteView} />
                     {/* <Route path="/admin/unsorted" component={NoteView} /> */}
-                    {<Route path="/admin/waste" component={WasteView} />}
+                    <Route path="/admin/waste" component={WasteView} />
                     <Route path="/admin/notebooks" component={NotebooksView} />
                     <Route path="/admin/blogs" component={BlogsView} />
                     <Route path="/admin/blog/:id" component={BLogView} />
                     <Route path="/admin/tags" component={TagsView} />
                     <Route path="/admin/preference" component={PreferenceView} />
+                    <Route path="/admin/comments/:type" component={CommentView} />
+                    <Route path="/admin/user/:id" component={UserCommentView} />
                     <Route component={() => <Redirect to="/admin/notebook/" />} />
                 </Switch>
             </div>
