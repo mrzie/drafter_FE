@@ -13,6 +13,8 @@ const handle = (pms => pms.then(
     err => [null, err]
 )) as { <T>(pms: AxiosPromise<T>): Promise<[T, any]> }
 
+const isDesktop = (e => e.indexOf("windows nt") >= 0 || e.indexOf("macintosh") >= 0)(navigator.userAgent.toLowerCase())
+
 axios.defaults.baseURL = '/v1/'
 axios.defaults.headers.post['Content-Type'] = 'application/json'
 interface ListResponse {
@@ -184,14 +186,22 @@ emitter.on('OAuthLogin', user => {
     })
 })
 
-export const OAuthLogin = () => {
-    const redirect_uri = encodeURIComponent(`${location.origin}/v1/OAuthLogin`)
-    window.open(`https://api.weibo.com/oauth2/authorize?client_id=${__basic.sinaClientId}&response_type=code&redirect_uri=${redirect_uri}`)
-}
+export const OAuthLogin = () => ToAuthorizePage('OAuthLogin')
 
-export const OAuthExclusiveLogin = () => {
-    const redirect_uri = encodeURIComponent(`${location.origin}/v1/OAuthExclusiveLogin`)
-    window.open(`https://api.weibo.com/oauth2/authorize?client_id=${__basic.sinaClientId}&response_type=code&redirect_uri=${redirect_uri}`)
+
+export const OAuthExclusiveLogin = () => ToAuthorizePage('OAuthExclusiveLogin')
+
+
+const ToAuthorizePage = (path: string) => {
+    const
+        redirect_uri = encodeURIComponent(`${location.origin}/v1/${path}?redirect_uri=${isDesktop ? '' : location.href}`),
+        url = `https://api.weibo.com/oauth2/authorize?client_id=${__basic.sinaClientId}&response_type=code&redirect_uri=${redirect_uri}`
+
+    if (isDesktop) {
+        window.open(url)
+    } else {
+        location.assign(url)
+    }
 }
 
 export const Logout = async () => {
