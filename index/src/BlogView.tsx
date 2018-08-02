@@ -86,7 +86,7 @@ const BlogMain = ({ blog }: { blog: Blog }) => {
                     // 为什么google的prettyprint也用了这么麻烦的写法
                     // fine
                     const list: HTMLPreElement[] = []
-                    el.querySelectorAll('pre').forEach(pre => {
+                    Array.from(el.querySelectorAll('pre')).forEach(pre => {
                         const child = pre.firstElementChild
                         if (child && child.nodeName === 'CODE' && child.className) {
                             pre.classList.add('prettyprint')
