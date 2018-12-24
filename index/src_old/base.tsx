@@ -22,7 +22,7 @@ export const Footer = () => <footer className="footer">
     </div>
 </footer>
 
-const mapStateToProps: MapStateToProps<LogoutEntryProps, null, State> = state => {
+const mapStateToProps: MapStateToProps<LogoutEntryProps, {}, State> = state => {
     return {
         user: state.user,
     }
