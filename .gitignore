@@ -1,4 +1,6 @@
 node_modules/
 dist/
 bundle/
+test/
+public/
 .DS_Store
