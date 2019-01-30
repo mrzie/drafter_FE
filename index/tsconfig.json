@@ -6,8 +6,9 @@
         "noImplicitAny": true,
         "module": "es2015", //commonjs
         "moduleResolution": "node",
-        "target": "es2015",
-        "jsx": "react"
+        "target": "esnext",
+        "jsx": "react",
+        "skipDefaultLibCheck": true
         // "experimentalDecorators": true,
         // "strictNullChecks": true
     },
