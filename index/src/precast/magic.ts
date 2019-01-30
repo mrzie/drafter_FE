@@ -49,12 +49,6 @@ export const useBehaviorSubject = <T>(initValue: T) => {
     return subject;
 };
 
-export const useSubjectState = <T>(initValue: T) => {
-    const subject = useBehaviorSubject(initValue);
-    const value = useObservable(() => subject, initValue);
-    return [value, subject] as [T, BehaviorSubject<T>];
-};
-
 export const useObservableFrom = <T>(inputs: T) => {
     const subject$ = useBehaviorSubject(inputs);
     useMemo(() => subject$.next(inputs), [inputs]);

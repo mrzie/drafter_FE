@@ -4,7 +4,6 @@ import Context from "../../model/store";
 import {
     useObservable,
     useEventHandler,
-    useSubjectState,
     useLayoutObservable,
     useBehaviorSubject,
     useDefinition,
@@ -31,7 +30,8 @@ export const commentInputBoxController = () => {
     const { state$, actions } = useContext(Context);
     const anchor = useRef(null as HTMLDivElement);
     const text$ = useBehaviorSubject('');
-    const [isFocus, isFocus$] = useSubjectState(false);
+    const isFocus$ = useBehaviorSubject(false);
+    const isFocus = useObservable(() => isFocus$, false);
     const [onSubmit, submit$] = useEventHandler<React.MouseEvent<HTMLDivElement>>();
     
     const toastTrigger$ = useDefinition((useSubject, deferCleanup) => {
@@ -238,7 +238,8 @@ export interface ToastViewProps {
 };
 
 export const toastViewController = ({ toastTrigger$ }: ToastViewProps) => {
-    const [toasts, toasts$] = useSubjectState([] as Toast[]);
+    const toasts$ = useBehaviorSubject([] as Toast[]);
+    const toasts = useObservable(() => toasts$, []);
     const [onAnimationEnd] = useEventHandler<React.AnimationEvent<HTMLDivElement>>($ => $.pipe(
         withLatestFrom(toasts$),
         map(([event, toasts]) => toasts.slice(1))

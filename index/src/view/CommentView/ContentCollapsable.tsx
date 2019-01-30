@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { memo } from "react";
-import { useSubjectState, useEventHandler, useObservableFrom, useObservable } from '../../precast/magic';
+import { useEventHandler, useObservableFrom, useObservable, useBehaviorSubject } from '../../precast/magic';
 import { withLatestFrom, map, distinctUntilChanged } from 'rxjs/operators';
 import { combineLatest } from 'rxjs';
 
@@ -11,7 +11,8 @@ interface ContentCollapsableProps {
 const _short_quote_content = (content: string) => content.slice(0, 200).split('\n').slice(0, 4).join('\n');
 const contentCollapsableController = ({ content }: ContentCollapsableProps) => {
     const
-        [collapsed, collapsed$] = useSubjectState(false),
+        collapsed$ = useBehaviorSubject(false),
+        collapsed = useObservable(() => collapsed$, false),
         [toggleCollapsed] = useEventHandler<React.MouseEvent>($ => $.pipe(
             withLatestFrom(collapsed$),
             map(([, collapsed]) => !collapsed)
@@ -33,7 +34,7 @@ const contentCollapsableController = ({ content }: ContentCollapsableProps) => {
     return [
         text,
         collapsable,
-        collapsed, 
+        collapsed,
         toggleCollapsed,
     ] as [string, boolean, boolean, typeof toggleCollapsed]
 }
