@@ -38,8 +38,8 @@ export const useEventHandler = <Event>(
         return subject;
     }, []);
     const callback = useCallback((e: Event) => subject.next(e), []);
-    useEffect(() => () => subject.complete());
-    return [callback, subject] as [typeof callback, Subject<Event>]
+    useEffect(() => () => subject.complete(), []);
+    return [callback, subject] as [typeof callback, Subject<Event>];
 };
 
 export const useBehaviorSubject = <T>(initValue: T) => {
@@ -69,7 +69,7 @@ export const useLayoutObservable = () => {
 };
 
 export type SubjectSubscriber<T> = (source: Observable<T>) => Subscription | Subscription[];
-export type UseSubject = <T>(handler: SubjectSubscriber<T>) => Subject<T>;
+export type UseSubject = <T>(handler?: SubjectSubscriber<T>) => Subject<T>;
 export type DeferCleanup = (handler: () => void) => void;
 
 export const useDefinition = <T>(definer: (useSubject: UseSubject, defer: DeferCleanup) => T) => {
@@ -80,9 +80,11 @@ export const useDefinition = <T>(definer: (useSubject: UseSubject, defer: DeferC
         const defer: DeferCleanup = fn => {
             defers.push(fn);
         };
-        const useSubject: UseSubject = <T>(handler: SubjectSubscriber<T>) => {
+        const useSubject: UseSubject = <T>(handler?: SubjectSubscriber<T>) => {
             const subject = new Subject<T>();
-            handler(subject);
+            if (handler instanceof Function) {
+                handler(subject);
+            }
             temporarySubjects.push(subject);
             return subject;
         };

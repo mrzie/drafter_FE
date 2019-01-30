@@ -17,7 +17,6 @@ import { debouncePartition, userFromState, loadStackFromState} from "../../preca
 import { KEYOF_POST_COMMENT } from "../../model/keyExtractor";
 import { Exception } from "../../cgi";
 import { AxiosResponse } from "axios";
-import { useSubject } from "../../precast/hooks";
 
 export const commentInputViewController = () => {
     const { state$ } = useContext(Context);
@@ -34,9 +33,9 @@ export const commentInputBoxController = () => {
     const text$ = useBehaviorSubject('');
     const [isFocus, isFocus$] = useSubjectState(false);
     const [onSubmit, submit$] = useEventHandler<React.MouseEvent<HTMLDivElement>>();
-    const toastTrigger$ = useSubject<string>();
-
-    useDefinition((useSubject, deferCleanup) => {
+    
+    const toastTrigger$ = useDefinition((useSubject, deferCleanup) => {
+        const toastTrigger$ = useSubject<string>();
         const quote$ = quoteId$.pipe(
             withLatestFrom(comments$),
             map(([id, comments]) => comments ? comments.find(c => c.id === id) : null)
@@ -68,6 +67,14 @@ export const commentInputBoxController = () => {
         const postComment$$ = validSubmit$.pipe(
             withLatestFrom(text$, quoteId$, id$)
         ).subscribe(async ([, content, quote, blogid]) => {
+            if (!blogid) {
+                toastTrigger$.next('未知错误');
+                return false;
+            }
+            if (content.trim() === '') {
+                toastTrigger$.next('内容不能为空');
+                return false;
+            }
             const [, [, err]] = await actions.postComment(blogid, content, quote);
             if (err) {
                 const response = err.response as AxiosResponse<Exception>;
@@ -92,6 +99,8 @@ export const commentInputBoxController = () => {
             frequentWarning$$.unsubscribe();
             postComment$$.unsubscribe();
         });
+
+        return toastTrigger$;
     });
 
     const user = useObservable(() => state$.pipe(userFromState()), null);
