@@ -3,10 +3,10 @@ import { Tag, Blog, User, Comment } from './model/types';
 const handle = (pms => pms.then(
     data => [data.data, null],
     err => [null, err as AxiosError]
-)) as { <T>(pms: AxiosPromise<T>): Promise<[T, AxiosError]> }
+)) as { <T>(pms: AxiosPromise<T>): Promise<[T, AxiosError]> };
 
-axios.defaults.baseURL = '/v1/'
-axios.defaults.headers.post['Content-Type'] = 'application/json'
+axios.defaults.baseURL = '/v1/';
+axios.defaults.headers.post['Content-Type'] = 'application/json';
 
 export interface ListResponse {
     tag?: Tag,
@@ -30,7 +30,7 @@ export interface Exception {
     msg: string,
     raw?: any,
     remark?: string,
-};
+}
 
 export const fetchList = (tag: string, p: number, showTag: boolean) => {
     return handle<ListResponse>(axios.get('/blogs', {
@@ -50,16 +50,16 @@ export const fetchComments = (id: string) => {
 
 export const fetchBlog = (id: string) => {
     return handle<Blog>(axios.get(`/blog/${id}`));
-}
+};
 
 export const logout = () => {
     return handle<SimpleMessage>(axios.get('/logout'));
-}
+};
 
 export const postComment = (blogid: string, content: string, quote: string) => {
     return handle<Comment>(axios.post('/compose', {
         content,
         blog: blogid,
         ref: quote,
-    }))
-}
+    }));
+};

@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useLayoutEffect, useCallback } from "react";
 import { Observable, BehaviorSubject, Subject, Subscription, of, concat } from "rxjs";
-import { withLatestFrom, map, debounce, distinctUntilChanged, skipUntil, take } from "rxjs/operators";
+import { withLatestFrom, map, debounce, distinctUntilChanged, take } from "rxjs/operators";
 import { animationFrame } from "rxjs/internal/scheduler/animationFrame";
 
 export const useObservable = <T>(maker: () => Observable<T>, initValue: T) => {
