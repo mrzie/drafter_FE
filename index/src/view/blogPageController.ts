@@ -103,7 +103,7 @@ export const blogViewController = ({ id$, blog$, history$ }: BlogCompProps) => {
                 return true;
             })
         ).subscribe(([el]) => {
-            const codeBoxes = [...el.querySelectorAll('pre')].filter(pre => {
+            const codeBoxes = Array.from(el.querySelectorAll('pre')).filter(pre => {
                 const { firstElementChild: child } = pre;
                 return child && child.nodeName === 'CODE' && child.className;
             });
