@@ -1,5 +1,5 @@
 import axios, { AxiosPromise, AxiosError } from 'axios';
-import { Tag, Blog, User, Comment } from './model/types';
+import { Tag, Blog, User, Comment } from './types';
 const handle = (pms => pms.then(
     data => [data.data, null],
     err => [null, err as AxiosError]

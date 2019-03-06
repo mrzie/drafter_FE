@@ -1,5 +1,3 @@
-import { Observable, Subject } from "rxjs";
-
 export interface Tag {
     name: string,
     count: number,
@@ -63,7 +61,3 @@ export interface State {
     user: User,
     comments: Map<string, Comment[]>,
 }
-
-export type BlogId = string;
-export type PageNumber = number;
-export type TagName = string;

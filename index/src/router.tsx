@@ -1,11 +1,11 @@
 import * as React from 'react';
 import { BrowserRouter, Switch, Route, Redirect } from 'react-router-dom'
 import ErrorPage from './view/ErrorPage';
-import ListPage from './view/ListPage';
-
 import Header from './view/Header';
 import Footer from './view/Footer';
 import BlogPage from './view/BlogPage';
+import ListPage from './view/ListPage';
+
 export const RouterView = () => <BrowserRouter>
     <div>
         <Header />

@@ -1,21 +1,29 @@
 import * as React from 'react';
-import { useMemo } from 'react';
-import { useObservableFrom } from './magic';
-import { RouteComponentProps, match, } from 'react-router';
-import { History } from 'history';
+import { useMemo, createContext, useContext } from 'react';
+import { useObservableFrom, useListener } from './magic';
+import { RouteComponentProps } from 'react-router';
 import { Observable } from 'rxjs';
+import { History } from 'history';
 
-export interface RouteObservableProps<T> {
-    match$: Observable<match<T>>,
-    history$: Observable<History>,
+const RouteContext = createContext({} as RouteContextValue<any>);
+
+export const useRouteContext = <T extends {}>() => useContext(RouteContext) as RouteContextValue<T>;
+
+interface RouteContextValue<T> {
+    // match$: Observable<match<T>>,
     params$: Observable<T>,
-};
+    history$: Observable<History<any>>,
+}
 
-export const Page = <T extends any>(C: React.ComponentType<RouteObservableProps<T>>) => ({ match, history }: RouteComponentProps<T>) => {
-    const match$ = useObservableFrom(match);
+export const Page = (C: React.ComponentType<{}>) => ({ match, history }: RouteComponentProps) => {
     const params$ = useObservableFrom(match.params);
     const history$ = useObservableFrom(history);
-    const node = useMemo(() => <C match$={match$} history$={history$} params$={params$} />, [match$, history$, params$]);
+
+    useListener(() => params$.subscribe(() => window.scrollTo(0, 0)));
+
+    const node = useMemo(() => <RouteContext.Provider value={{ params$, history$ }}>
+        <C />
+    </RouteContext.Provider>, []);
     return node;
 };
 

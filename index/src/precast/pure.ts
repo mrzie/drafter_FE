@@ -1,4 +1,6 @@
 import { Blog } from '../model/types';
+import { Observable, combineLatest } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 export const generateAbstract = (b: Blog) => {
     const div = document.createElement('div');
@@ -58,3 +60,8 @@ export const timeFormat = (d: Date, pattern: string) => {
         .replace(/M+/g, replacerFactory(d.getMinutes()))
         .replace(/s+/g, replacerFactory(d.getSeconds()))
 };
+
+export const handleReject = <T>(pms: Promise<any>) => pms.then(
+    data => null,
+    err => err as T,
+);
