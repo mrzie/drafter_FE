@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { memo } from 'react';
 import { Observable } from "rxjs";
-import { useObservable } from "../../precast/magic";
+import { useObservable } from "fugo";
 
 interface LoadIndicatorProps {
     nextPage$: Observable<number>,

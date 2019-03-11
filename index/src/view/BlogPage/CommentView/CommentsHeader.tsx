@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useContext, memo } from "react";
 import CommentsContext from "./CommentsContext";
-import { useObservable } from "../../../precast/magic";
+import { useObservable } from "fugo";
 import { filter, map } from "rxjs/operators";
 
 const CommentsHeader = () => {

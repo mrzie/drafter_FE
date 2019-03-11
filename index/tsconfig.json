@@ -8,8 +8,9 @@
         "moduleResolution": "node",
         "target": "esnext",
         "jsx": "react",
-        "skipDefaultLibCheck": true
-        // "experimentalDecorators": true,
+        "skipDefaultLibCheck": true,
+        // "emitDecoratorMetadata": true,
+        "experimentalDecorators": true
         // "strictNullChecks": true
     },
     "include": [

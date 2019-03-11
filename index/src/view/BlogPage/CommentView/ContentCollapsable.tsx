@@ -2,7 +2,7 @@ import * as React from 'react';
 import { memo, useMemo } from "react";
 import { withLatestFrom, map, distinctUntilChanged, scan, startWith } from 'rxjs/operators';
 import { combineLatest } from 'rxjs';
-import { useObservable, useEventHandler, useObservableFrom } from '../../../precast/magic';
+import { useObservable, useEventHandler, useObservableFrom } from 'fugo';
 
 interface ContentCollapsableProps {
     content: string,

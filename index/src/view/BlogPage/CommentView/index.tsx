@@ -6,7 +6,7 @@ import { combineLatest, concat, fromEvent, merge } from 'rxjs';
 import { commentsFromState, loadStackFromState } from '../../../model/operators';
 import { map, take, skip, withLatestFrom, filter } from 'rxjs/operators';
 import { KEYOF_FETCH_COMMENTS } from '../../../model/keyExtractor';
-import { useListener, useBehaviorSubject, useWhenLayout } from '../../../precast/magic';
+import { useListener, useBehaviorSubject, useWhenLayout } from 'fugo';
 import CommentsContext from './CommentsContext';
 import CommentsHeader from './CommentsHeader';
 import CommentList from './CommentList';

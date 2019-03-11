@@ -1,6 +1,6 @@
 import { Observable, combineLatest } from "rxjs";
 import { State, Comment } from "../../../../src/model/types";
-import { useObservable } from "../../../precast/magic";
+import { useObservable } from "fugo";
 import { filter, pluck,  map, distinctUntilChanged } from "rxjs/operators";
 import { usersFromState } from "../../../model/operators";
 

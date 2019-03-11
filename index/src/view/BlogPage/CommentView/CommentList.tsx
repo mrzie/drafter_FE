@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useContext, memo, useMemo } from 'react';
 import CommentsContext from './CommentsContext';
-import { useObservable, useObservableFrom, useEventHandler, useListener } from '../../../precast/magic';
+import { useObservable, useObservableFrom, useEventHandler, useListener } from 'fugo';
 import { Comment } from '../../../model/types';
 import { useStore } from '../../../model/store';
 import { map, withLatestFrom } from 'rxjs/operators';

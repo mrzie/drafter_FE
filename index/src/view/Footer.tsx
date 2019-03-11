@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { memo } from 'react';
 import { __basic } from '../model/conf';
-import { useEventHandler, useObservable, useListener } from '../precast/magic';
+import { useEventHandler, useObservable, useListener } from 'fugo';
 import { userFromState } from '../model/operators';
 import { useStore } from '../model/store';
 

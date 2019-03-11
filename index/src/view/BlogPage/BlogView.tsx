@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useContext, useRef, useMemo, memo } from 'react';
 import BlogContext from './BlogContext';
-import { useObservable, useListener, useWhenLayout } from '../../precast/magic';
+import { useObservable, useListener, useWhenLayout } from 'fugo';
 import { throttle, pluck, filter, withLatestFrom } from 'rxjs/operators';
 import { Blog } from '../../../src/model/types';
 import { Link } from 'react-router-dom';

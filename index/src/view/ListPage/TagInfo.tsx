@@ -2,7 +2,7 @@ import * as React from 'react';
 import { memo } from "react";
 import {useStore} from "../../model/store";
 import { useRouteContext } from "../../precast/page";
-import { useObservable } from "../../precast/magic";
+import { useObservable } from "fugo";
 import { map } from "rxjs/operators";
 import { tagsFromState } from "../../model/operators";
 import { combineLatest } from "rxjs";

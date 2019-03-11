@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useMemo } from 'react';
 import Page, { useRouteContext } from '../../precast/page';
 import { useStore } from '../../model/store';
-import { useListener } from '../../precast/magic';
+import { useListener } from 'fugo';
 import { combineLatest } from 'rxjs';
 import { withLatestFrom, pluck, map, filter, pairwise, distinctUntilChanged } from 'rxjs/operators';
 import { __basic } from '../../model/conf';

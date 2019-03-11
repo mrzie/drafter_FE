@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useContext, memo, useMemo, useRef, createContext, FunctionComponent } from 'react';
 import CommentsContext from './CommentsContext';
-import { useObservable, useEventHandler, useListener, useWhenLayout } from '../../../precast/magic';
+import { useObservable, useEventHandler, useListener, useWhenLayout } from 'fugo';
 import { useStore } from '../../../model/store';
 import { userFromState, debouncePartition, loadStackFromState } from '../../../model/operators';
 import { Cross } from '../../../svgSymbols';

@@ -6,7 +6,7 @@ import { timeFormat } from '../../precast/pure';
 import { __basic } from '../../model/conf';
 import { Blog, List } from '../../model/types';
 import { Observable } from 'rxjs';
-import { useObservable } from '../../precast/magic';
+import { useObservable } from 'fugo';
 import { blogsFromState } from '../../model/operators';
 import { map, withLatestFrom } from 'rxjs/operators';
 import { useStore } from '../../model/store';

@@ -1,5 +1,5 @@
 import { Observable, Subject } from "rxjs";
-import { useObservable } from "./magic";
+import { useObservable } from "fugo";
 import { useEffect, useMemo } from "react";
 
 export interface ComponentMain<D extends Drivers> {

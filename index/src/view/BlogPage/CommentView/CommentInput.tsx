@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { memo } from 'react';
-import { useObservable } from '../../../precast/magic';
+import { useObservable } from 'fugo';
 import { useStore } from '../../../model/store';
 import { userFromState } from '../../../model/operators';
 import { Sina } from '../../../svgSymbols';

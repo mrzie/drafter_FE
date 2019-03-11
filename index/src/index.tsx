@@ -4,7 +4,7 @@ import Store, { useStore } from './model/store';
 import { __conf } from './model/conf';
 import { SvgSymbolsDefinitions } from './svgSymbols';
 import RouterView from './router';
-import { useListener } from './precast/magic';
+import { useListener } from 'fugo';
 import { loginResult$ } from './model/oauth';
 import { render } from 'react-dom';
 

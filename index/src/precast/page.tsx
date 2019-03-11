@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useMemo, createContext, useContext } from 'react';
-import { useObservableFrom, useListener } from './magic';
+import { useObservableFrom, useListener } from 'fugo';
 import { RouteComponentProps } from 'react-router';
 import { Observable } from 'rxjs';
 import { History } from 'history';

@@ -2,7 +2,7 @@ import * as React from 'react';
 import { __basic } from '../model/conf';
 import { Link } from 'react-router-dom';
 import Page, { useRouteContext } from '../precast/page';
-import { useEventHandler, useListener } from '../precast/magic';
+import { useEventHandler, useListener } from 'fugo';
 import { withLatestFrom } from 'rxjs/operators';
 
 export const ErrorPage = () => {
