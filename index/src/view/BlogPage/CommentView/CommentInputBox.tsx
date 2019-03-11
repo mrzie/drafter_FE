@@ -1,11 +1,11 @@
 import * as React from 'react';
-import { useContext, memo, useMemo, useRef, useLayoutEffect, createContext, FunctionComponent } from 'react';
+import { useContext, memo, useMemo, useRef, createContext, FunctionComponent } from 'react';
 import CommentsContext from './CommentsContext';
-import { useObservable, useEventHandler, useListener, useSubject } from '../../../precast/magic';
+import { useObservable, useEventHandler, useListener, useWhenLayout } from '../../../precast/magic';
 import { useStore } from '../../../model/store';
 import { userFromState, debouncePartition, loadStackFromState } from '../../../model/operators';
 import { Cross } from '../../../svgSymbols';
-import { map, withLatestFrom, mapTo, pluck, throttle, filter, scan, startWith } from 'rxjs/operators';
+import { map, withLatestFrom, mapTo, pluck, throttle, filter, scan, startWith, refCount } from 'rxjs/operators';
 import { BehaviorSubject, merge, combineLatest, Subject } from 'rxjs';
 import BlogContext from '../BlogContext';
 import { timeFormat, handleReject } from '../../../precast/pure';
@@ -103,7 +103,7 @@ const UserView = () => {
 
 const CommentInputQuote = () => {
     const { quoteId$, comments$ } = useContext(CommentsContext);
-    const [onQuoteCancel, calcel$] = useEventHandler();
+    const [onQuoteCancel, cancel$] = useEventHandler();
     const refBox = useRef(null as HTMLDivElement);
     const refContent = useRef(null as HTMLDivElement);
     const { state$ } = useStore();
@@ -116,19 +116,16 @@ const CommentInputQuote = () => {
     const quoteUser = useAuthorFrom(state$, quote$);
 
     // cancel quote
-    useListener(() => calcel$.subscribe(() => quoteId$.next(null)));
+    useListener(() => cancel$.subscribe(() => quoteId$.next(null)));
 
-    const layout$ = useSubject();
-    useLayoutEffect(() => {
-        layout$.next(0);
-    }, null);
+    const ref$ = useWhenLayout(() => ({
+        box: refBox.current,
+        content: refContent.current,
+    }));
     // quote animation
-    useListener(() => layout$.pipe(
+    useListener(() => ref$.pipe(
         throttle(() => quote$),
-    ).subscribe(() => {
-        const elBox = refBox.current;
-        const elContent = refContent.current;
-
+    ).subscribe(({ box: elBox, content: elContent }) => {
         if (elBox) {
             if (elContent) {
                 elBox.style.height = `${elContent.clientHeight + 10}px`;
@@ -172,10 +169,7 @@ const CommentTextarea = () => {
     const isPosting = useObservable(() => combineLatest(id$, loadStackFromState(state$)).pipe(
         map(([blogid, loadStack]) => loadStack.includes(KEYOF_POST_COMMENT(blogid)))
     ), true);
-    const layout$ = useSubject();
-    useLayoutEffect(() => {
-        layout$.next(0);
-    }, null);
+    const ref$ = useWhenLayout(() => ref.current);
 
     // set focus
     useListener(() => merge(
@@ -184,9 +178,8 @@ const CommentTextarea = () => {
     ).subscribe(v => isFocus$.next(v)));
 
     // height adjustment
-    useListener(() => layout$.pipe(
+    useListener(() => ref$.pipe(
         throttle(() => text$),
-        map(() => ref.current)
     ).subscribe(el => {
         if (!el) {
             return;

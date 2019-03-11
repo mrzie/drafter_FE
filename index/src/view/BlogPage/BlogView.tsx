@@ -1,8 +1,8 @@
 import * as React from 'react';
-import { useContext, useLayoutEffect, useRef, useMemo, memo } from 'react';
+import { useContext, useRef, useMemo, memo } from 'react';
 import BlogContext from './BlogContext';
-import { useObservable, useListener, useSubject } from '../../precast/magic';
-import { throttle, pluck, map, filter, withLatestFrom } from 'rxjs/operators';
+import { useObservable, useListener, useWhenLayout } from '../../precast/magic';
+import { throttle, pluck, filter, withLatestFrom } from 'rxjs/operators';
 import { Blog } from '../../../src/model/types';
 import { Link } from 'react-router-dom';
 import { timeFormat } from '../../precast/pure';
@@ -15,16 +15,14 @@ const BlogView = () => {
     const { id$, blog$, isLoading$ } = useContext(BlogContext);
     const refContent = useRef(null as HTMLDivElement);
 
-    const layout$ = useSubject();
-    useLayoutEffect(() => layout$.next(null), null);
+    const refContent$ = useWhenLayout(() => refContent.current);
 
     const blog = useObservable(() => blog$, null);
     const isLoading = useObservable(() => isLoading$, true);
 
     // pretty print
-    useListener(() => layout$.pipe(
+    useListener(() => refContent$.pipe(
         throttle(() => blog$.pipe(pluck<Blog, string>('content'))),
-        map(() => refContent.current),
         withLatestFrom(blog$, isLoading$),
         filter(([el, blog, isLoading]) => {
             if (isLoading) {

@@ -1,12 +1,12 @@
 import * as React from 'react';
-import { memo, useContext, useMemo, useLayoutEffect, useRef } from 'react';
+import { memo, useContext, useMemo, useRef } from 'react';
 import { useStore } from '../../../model/store';
 import BlogContext from '../BlogContext';
 import { combineLatest, concat, fromEvent, merge } from 'rxjs';
 import { commentsFromState, loadStackFromState } from '../../../model/operators';
 import { map, take, skip, withLatestFrom, filter } from 'rxjs/operators';
 import { KEYOF_FETCH_COMMENTS } from '../../../model/keyExtractor';
-import { useListener, useBehaviorSubject, useSubject } from '../../../precast/magic';
+import { useListener, useBehaviorSubject, useWhenLayout } from '../../../precast/magic';
 import CommentsContext from './CommentsContext';
 import CommentsHeader from './CommentsHeader';
 import CommentList from './CommentList';
@@ -18,8 +18,7 @@ const CommentView = () => {
     const { id$, blog$ } = useContext(BlogContext);
     const refBox = useRef(null as HTMLDivElement);
 
-    const firstLayout$ = useSubject();
-    useLayoutEffect(() => firstLayout$.next(null), []);
+    const layout$ = useWhenLayout(() => null);
 
     const { isLoading$, comments$ } = useMemo(() => {
         const comments$ = combineLatest(id$, state$.pipe(commentsFromState)).pipe(
@@ -34,7 +33,7 @@ const CommentView = () => {
 
     // fetch comments
     useListener(() => {
-        const afterRoute$ = concat(firstLayout$.pipe(take(1)), blog$).pipe(
+        const afterRoute$ = concat(layout$.pipe(take(1)), blog$).pipe(
             skip(1)
         );
         const afterScroll$ = fromEvent<UIEvent>(document, 'scroll');

@@ -52,7 +52,7 @@ export const useObservableFrom = <T>(inputs: T) => {
     return useMemo(() => subject$.asObservable(), []);
 };
 
-export const useWhenLayout = <T>(builder?: () => T) => {
+export const useWhenLayout = <T>(builder: () => T) => {
     const subject = useMemo(() => new Subject<T>(), []);
     useLayoutEffect(() => subject.next(builder()));
     useEffect(() => () => subject.complete(), []);
@@ -62,4 +62,4 @@ export const useWhenLayout = <T>(builder?: () => T) => {
 export const useListener = (subscriptionMaker: () => Subscription) => {
     const subscription = useMemo(subscriptionMaker, []);
     useEffect(() => () => subscription.unsubscribe(), []);
-}
+};
