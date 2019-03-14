@@ -55,7 +55,7 @@ export default {
     },
     upsertUsers: (users: User[]) => ({ users: prevUsers }: State) => ({
         users: [
-            ...prevUsers.filter(currentUser => users.find(u => u.id === currentUser.id) === null),
+            ...prevUsers.filter(currentUser => users.find(u => u.id === currentUser.id) === undefined),
             ...users,
         ],
     }),

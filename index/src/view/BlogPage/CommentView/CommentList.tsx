@@ -19,7 +19,7 @@ const CommentList = () => {
 
     return <div>
         {isLoading && <div className="load-more">加载中</div>}
-        {!isLoading && comments === null && <div>加载失败</div>}
+        {!isLoading && comments === undefined && <div>加载失败</div>}
         {comments ? comments.sort((a, b) => a.time > b.time ? 1 : -1).map(comment => <CommentItem
             comment={comment}
             key={comment.id}
